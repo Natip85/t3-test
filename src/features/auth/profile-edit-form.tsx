@@ -15,7 +15,7 @@ import {useToast} from '@/hooks/use-toast'
 import {Checkbox} from '@/ui/checkbox'
 
 import {type UserProfileForm, userProfileFormSchema} from './user-types'
-import {UserLanguage, UserRoles} from '@/server/db/schema'
+import {type UserLanguage, UserRoles} from '@/server/db/schema'
 import {ProfileImageInput} from './profile-image-input'
 
 const languages: {label: string; value: UserLanguage}[] = [

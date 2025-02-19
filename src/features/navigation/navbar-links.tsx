@@ -2,9 +2,7 @@ import Link from 'next/link'
 import React from 'react'
 import {USER_NAV_ITEMS} from './constants'
 
-type Props = {}
-
-export default function NavbarLinks({}: Props) {
+export default function NavbarLinks() {
   return (
     <nav className='hidden items-center gap-6 text-sm font-medium md:flex'>
       {USER_NAV_ITEMS.map((item) => (

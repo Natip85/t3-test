@@ -56,6 +56,8 @@ const MountainIcon: React.FC<IconProps> = (props) => {
 }
 
 export default function Navbar({callbackUrl = '/'}: {callbackUrl?: string}) {
+  console.log({callbackUrl})
+
   const {user, isAuthenticated} = useUser()
   return (
     <header className='sticky top-0 z-50 w-full border-b bg-white dark:border-gray-800 dark:bg-gray-950'>
