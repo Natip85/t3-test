@@ -6,7 +6,6 @@ import {redirect} from 'next/navigation'
 
 export default async function ProfileDetailsPage() {
   const user = await api.users.getMe()
-  console.log({user})
 
   if (!user) {
     redirect('/auth/login')
