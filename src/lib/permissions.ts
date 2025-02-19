@@ -1,6 +1,6 @@
-import {UserSelect} from '@/features/auth/user-types'
-import {UserRole} from '@/server/db/schema/schema-constants'
-import type {User} from 'next-auth'
+import {type UserSelect} from '@/features/auth/user-types'
+import {type UserRole} from '@/server/db/schema/schema-constants'
+import {type User} from 'next-auth'
 // import type {IncidentSelect} from '@/features/incident/incident-types'
 // import {type AssetSelect} from '@/features/assets/asset-types'
 
