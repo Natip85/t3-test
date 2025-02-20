@@ -4,6 +4,7 @@ import {type AdapterAccount} from 'next-auth/adapters'
 
 import * as Utils from '../utils'
 import {type UserLanguage, UserLanguages, type UserRole, UserRoles} from './schema-constants'
+import {cart} from '.'
 // import {assets} from './asset-schema'
 // import {incident, incidentBookmarks} from './incidents-schema'
 
@@ -26,7 +27,7 @@ export const users = Utils.createAuthTable(
     roles: userRoleEnum('roles').array().$type<UserRole[]>().default(defaultUserRole).notNull(),
     language: userLanguageEnum('language').$type<UserLanguage>().default(defaultUserLanguage).notNull(),
     phone: Utils.chars('phone'),
-    lastLogin: Utils.timeStamp('last_login'), // not updating this field yet
+    lastLogin: Utils.timeStamp('last_login'),
     ...Utils.createUpdateTimestamps,
   },
   (table) => ({
@@ -34,12 +35,11 @@ export const users = Utils.createAuthTable(
   })
 )
 
-export const usersRelations = relations(users, ({many}) => ({
+export const usersRelations = relations(users, ({many, one}) => ({
   accounts: many(accounts),
-  // incidentsReported: many(incident, {relationName: 'user_reporter_incidents'}),
-  // incidentsInvestigated: many(incident, {relationName: 'user_investigator_incidents'}),
+  cart: one(cart),
   // assets: many(assets),
-  // bookmarks: many(incidentBookmarks),
+  // bookmarks: many(productBookmark),
 }))
 
 export const accounts = Utils.createAuthTable(
