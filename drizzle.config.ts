@@ -1,4 +1,5 @@
 import {type Config} from 'drizzle-kit'
+console.log('testtttt')
 
 import {env} from '@/env'
 
