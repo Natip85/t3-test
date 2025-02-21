@@ -1,5 +1,5 @@
 import * as Utils from '@/server/db/utils'
-import {index, integer, serial, unique} from 'drizzle-orm/pg-core'
+import {index, integer, serial, text} from 'drizzle-orm/pg-core'
 import {productVariant, users} from '.'
 import {relations} from 'drizzle-orm'
 
@@ -12,7 +12,7 @@ export const cart = Utils.createTable(
     ...Utils.createUpdateTimestamps,
   },
   (table) => ({
-    userIdIdx: unique('cart_user_unique').on(table.userId),
+    userIdIdx: index('cart_user_unique').on(table.userId),
   })
 )
 
@@ -24,13 +24,11 @@ export const cartsRelations = relations(cart, ({one, many}) => ({
 export const cartItem = Utils.createTable(
   'cart_item',
   {
-    id: Utils.userId('id')
-      .primaryKey()
-      .$defaultFn(() => crypto.randomUUID()),
-    cartId: Utils.userId().references(() => cart.id, {onDelete: 'cascade'}),
-    productVariantId: integer('product_variant_id')
-      .notNull()
-      .references(() => productVariant.id, {onDelete: 'cascade'}),
+    id: serial('id').primaryKey().notNull(),
+    cartId: integer('cart_id')
+      .references(() => cart.id, {onDelete: 'cascade'})
+      .notNull(),
+    productVariantId: integer('product_variant_id').references(() => productVariant.id, {onDelete: 'cascade'}),
     quantity: integer('quantity').notNull().default(1),
     date: Utils.timeStamp('date'),
     ...Utils.createUpdateTimestamps,
