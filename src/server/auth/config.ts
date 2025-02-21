@@ -1,6 +1,7 @@
 import {DrizzleAdapter} from '@auth/drizzle-adapter'
 import {type DefaultSession, type NextAuthConfig} from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
+import ResendProvider from 'next-auth/providers/resend'
 import {db} from '@/server/db'
 import {env} from '@/env'
 import {users, type UserLanguage, type UserRole, accounts, sessions, verificationTokens} from '../db/schema'
@@ -50,6 +51,7 @@ export const authConfig = {
       redirectProxyUrl: env.AUTH_REDIRECT_PROXY_URL,
       allowDangerousEmailAccountLinking: true,
     }),
+    ResendProvider({from: env.EMAIL_FROM}),
     /**
      * ...add more providers here.
      *
