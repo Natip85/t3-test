@@ -1,6 +1,6 @@
 import * as Utils from '@/server/db/utils'
 import {relations} from 'drizzle-orm'
-import {serial, index, text, integer} from 'drizzle-orm/pg-core'
+import {index, text, integer, serial} from 'drizzle-orm/pg-core'
 import {cartItem} from '.'
 
 export const product = Utils.createTable(

@@ -48,14 +48,13 @@ CREATE TABLE "t3-testcart" (
 	"user_id" varchar(500) NOT NULL,
 	"date" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-	"updated_at" timestamp with time zone,
-	CONSTRAINT "cart_user_unique" UNIQUE("user_id")
+	"updated_at" timestamp with time zone
 );
 --> statement-breakpoint
 CREATE TABLE "t3-testcart_item" (
-	"id" varchar(500) PRIMARY KEY NOT NULL,
-	"user_id" varchar(500) NOT NULL,
-	"product_variant_id" integer NOT NULL,
+	"id" serial PRIMARY KEY NOT NULL,
+	"cart_id" integer NOT NULL,
+	"product_variant_id" integer,
 	"quantity" integer DEFAULT 1 NOT NULL,
 	"date" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -93,7 +92,7 @@ CREATE TABLE "t3-testproduct_variant" (
 ALTER TABLE "t3-test-auth_account" ADD CONSTRAINT "t3-test-auth_account_user_id_t3-test-auth_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."t3-test-auth_user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "t3-test-auth_session" ADD CONSTRAINT "t3-test-auth_session_user_id_t3-test-auth_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."t3-test-auth_user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "t3-testcart" ADD CONSTRAINT "t3-testcart_user_id_t3-test-auth_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."t3-test-auth_user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "t3-testcart_item" ADD CONSTRAINT "t3-testcart_item_user_id_t3-testcart_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."t3-testcart"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "t3-testcart_item" ADD CONSTRAINT "t3-testcart_item_cart_id_t3-testcart_id_fk" FOREIGN KEY ("cart_id") REFERENCES "public"."t3-testcart"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "t3-testcart_item" ADD CONSTRAINT "t3-testcart_item_product_variant_id_t3-testproduct_variant_id_fk" FOREIGN KEY ("product_variant_id") REFERENCES "public"."t3-testproduct_variant"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "t3-testproduct_variant" ADD CONSTRAINT "t3-testproduct_variant_product_id_t3-testproduct_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."t3-testproduct"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "account_user_id_idx" ON "t3-test-auth_account" USING btree ("user_id");--> statement-breakpoint
@@ -101,7 +100,8 @@ CREATE INDEX "session_user_id_idx" ON "t3-test-auth_session" USING btree ("user_
 CREATE INDEX "user_email_idx" ON "t3-test-auth_user" USING btree ("email");--> statement-breakpoint
 CREATE INDEX "verification_token_identifier_idx" ON "t3-test-auth_verification_token" USING btree ("identifier");--> statement-breakpoint
 CREATE INDEX "verification_token_expires_idx" ON "t3-test-auth_verification_token" USING btree ("expires");--> statement-breakpoint
-CREATE INDEX "cart_id_idx" ON "t3-testcart_item" USING btree ("user_id");--> statement-breakpoint
-CREATE INDEX "cart_variant_idx" ON "t3-testcart_item" USING btree ("user_id","product_variant_id");--> statement-breakpoint
+CREATE INDEX "cart_user_unique" ON "t3-testcart" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "cart_id_idx" ON "t3-testcart_item" USING btree ("cart_id");--> statement-breakpoint
+CREATE INDEX "cart_variant_idx" ON "t3-testcart_item" USING btree ("cart_id","product_variant_id");--> statement-breakpoint
 CREATE INDEX "product_name_idx" ON "t3-testproduct" USING btree ("name");--> statement-breakpoint
 CREATE INDEX "product_variant_product_id_idx" ON "t3-testproduct_variant" USING btree ("product_id");
