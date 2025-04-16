@@ -1,9 +1,9 @@
 import {sql} from 'drizzle-orm'
 import {pgTableCreator, type PgTimestampConfig, timestamp, varchar} from 'drizzle-orm/pg-core'
 
-export const createTable = pgTableCreator((name) => `t3-test${name}`)
+export const createTable = pgTableCreator((name) => name)
 
-export const createAuthTable = pgTableCreator((name) => `t3-test-auth_${name}`)
+export const createAuthTable = pgTableCreator((name) => `auth_${name}`)
 
 export const timestampSettings: PgTimestampConfig = {
   mode: 'date',

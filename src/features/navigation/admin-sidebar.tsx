@@ -1,5 +1,5 @@
 'use client'
-import {Users2} from 'lucide-react'
+import {Package, Users2} from 'lucide-react'
 
 import {
   Sidebar,
@@ -15,7 +15,7 @@ import {
 import AdminSidebarMenuActiveButton from './admin-sidebar-menu-active-button'
 import AdminSidebarUserMenu from './admin-sidebar-user-menu'
 import Link from 'next/link'
-import SidebarLogo from '@/assets/logoMobile.svg'
+import {MountainIcon} from './navbar'
 
 const items = [
   {
@@ -23,16 +23,11 @@ const items = [
     url: '/admin/users',
     icon: Users2,
   },
-  // {
-  //   title: 'incidents',
-  //   url: '/admin/incidents',
-  //   icon: FrameIcon,
-  // },
-  // {
-  //   title: 'offenders',
-  //   url: '/admin/offenders',
-  //   icon: ShieldBanIcon,
-  // },
+  {
+    title: 'products',
+    url: '/admin/products',
+    icon: Package,
+  },
 ]
 
 export function AdminSidebar() {
@@ -47,8 +42,8 @@ export function AdminSidebar() {
               asChild
             >
               <Link href='/'>
-                <div className='text-sidebar-primary-foreground flex items-center justify-center rounded-lg'>
-                  <SidebarLogo />
+                <div className='flex items-center justify-center rounded-lg text-sidebar-primary-foreground'>
+                  <MountainIcon className='size-8' />
                 </div>
                 <div className='flex h-full flex-col justify-end text-left text-sm leading-tight'>
                   <span className='truncate text-xs'>T3 Testing</span>

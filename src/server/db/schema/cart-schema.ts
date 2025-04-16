@@ -1,6 +1,6 @@
 import * as Utils from '@/server/db/utils'
-import {index, integer, serial, text} from 'drizzle-orm/pg-core'
-import {productVariant, users} from '.'
+import {index, integer, serial} from 'drizzle-orm/pg-core'
+import {variant, users} from '.'
 import {relations} from 'drizzle-orm'
 
 export const cart = Utils.createTable(
@@ -28,9 +28,8 @@ export const cartItem = Utils.createTable(
     cartId: integer('cart_id')
       .references(() => cart.id, {onDelete: 'cascade'})
       .notNull(),
-    productVariantId: integer('product_variant_id').references(() => productVariant.id, {onDelete: 'cascade'}),
+    productVariantId: integer('product_variant_id').references(() => variant.id, {onDelete: 'cascade'}),
     quantity: integer('quantity').notNull().default(1),
-    date: Utils.timeStamp('date'),
     ...Utils.createUpdateTimestamps,
   },
   (table) => ({
@@ -41,5 +40,5 @@ export const cartItem = Utils.createTable(
 
 export const cartItemsRelations = relations(cartItem, ({one}) => ({
   cart: one(cart, {fields: [cartItem.cartId], references: [cart.id]}),
-  productVariant: one(productVariant, {fields: [cartItem.productVariantId], references: [productVariant.id]}),
+  productVariant: one(variant, {fields: [cartItem.productVariantId], references: [variant.id]}),
 }))

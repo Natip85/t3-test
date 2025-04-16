@@ -5,7 +5,6 @@ import {Button} from '@/ui/button'
 import Link from 'next/link'
 import {type UserRole} from '@/server/db/schema'
 
-// TODO: pass data in
 type PermissionGuardProps<Resource extends PermissionType> = {
   children: ReactNode
 } & (
