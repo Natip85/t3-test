@@ -1,7 +1,7 @@
 import {type UserSelect} from '@/features/auth/user-types'
+import {type ProductSelect} from '@/features/products/product-types'
 import {type UserRole} from '@/server/db/schema/schema-constants'
 import {type User} from 'next-auth'
-// import type {IncidentSelect} from '@/features/incident/incident-types'
 // import {type AssetSelect} from '@/features/assets/asset-types'
 
 export type Permissions = {
@@ -9,10 +9,10 @@ export type Permissions = {
     dataType: Partial<UserSelect>
     action: 'edit' | 'view' | 'delete' | 'block'
   }
-  // incidents: {
-  //   dataType: Partial<IncidentSelect>
-  //   action: 'edit' | 'view' | 'delete' | 'archive'
-  // }
+  products: {
+    dataType: Partial<ProductSelect>
+    action: 'edit' | 'view' | 'delete' | 'archive' | 'create'
+  }
   // assets: {
   //   dataType: Partial<AssetSelect>
   //   action: 'delete' | 'edit'
@@ -40,12 +40,13 @@ const ROLES: RolesWithPermissions = {
       delete: true,
       block: true,
     },
-    // incidents: {
-    //   view: true,
-    //   edit: true,
-    //   delete: true,
-    //   archive: true,
-    // },
+    products: {
+      view: true,
+      edit: true,
+      delete: true,
+      archive: true,
+      create: true,
+    },
     // assets: {
     //   delete: true,
     //   edit: true,
@@ -57,12 +58,13 @@ const ROLES: RolesWithPermissions = {
       edit: true,
       block: true,
     },
-    // incidents: {
-    //   view: true,
-    //   edit: true,
-    //   delete: true,
-    //   archive: true,
-    // },
+    products: {
+      view: true,
+      edit: true,
+      delete: true,
+      archive: true,
+      create: true,
+    },
     // assets: {
     //   delete: true,
     //   edit: true,
@@ -73,12 +75,13 @@ const ROLES: RolesWithPermissions = {
       view: true,
       block: true,
     },
-    // incidents: {
-    //   view: true,
-    //   edit: true,
-    //   delete: true,
-    //   archive: true,
-    // },
+    products: {
+      view: true,
+      edit: true,
+      delete: true,
+      archive: true,
+      create: true,
+    },
     // assets: {
     //   delete: true,
     //   edit: true,
@@ -88,9 +91,10 @@ const ROLES: RolesWithPermissions = {
     users: {
       view: true,
     },
-    // incidents: {
-    //   view: true,
-    // },
+    products: {
+      view: true,
+      create: true,
+    },
   },
   paid: {
     users: {
@@ -98,9 +102,10 @@ const ROLES: RolesWithPermissions = {
       view: (user, data) => user.id === data.id,
       delete: (user, data) => user.id === data.id,
     },
-    // incidents: {
-    //   view: (user, data) => user.id === data.reporterId,
-    // },
+    products: {
+      create: true,
+      // view: (user, data) => user.id === data.reporterId,
+    },
   },
   user: {
     users: {
@@ -108,9 +113,9 @@ const ROLES: RolesWithPermissions = {
       view: (user, data) => user.id === data.id,
       delete: (user, data) => user.id === data.id,
     },
-    // incidents: {
-    //   view: (user, data) => user.id === data.reporterId,
-    // },
+    products: {
+      view: (user, data) => user.id === data.id,
+    },
     // assets: {
     //   delete: (user, data) => user.id === data.createdByUserId,
     //   edit: (user, data) => user.id === data.createdByUserId,
