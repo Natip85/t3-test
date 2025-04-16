@@ -62,7 +62,8 @@ CREATE TABLE "cart_item" (
 --> statement-breakpoint
 CREATE TABLE "option" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"name" varchar(500) NOT NULL
+	"name" varchar(500) NOT NULL,
+	CONSTRAINT "option_name_unique" UNIQUE("name")
 );
 --> statement-breakpoint
 CREATE TABLE "option_value" (
