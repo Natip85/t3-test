@@ -1,5 +1,5 @@
 {
-  "id": "e6ba0fb0-40c0-44fe-b225-4a118420c7aa",
+  "id": "66aa476e-0437-4134-a754-9373098b1a5f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -557,7 +557,13 @@
       },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "option_name_unique": {
+          "name": "option_name_unique",
+          "nullsNotDistinct": false,
+          "columns": ["name"]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
