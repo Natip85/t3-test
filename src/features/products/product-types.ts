@@ -27,7 +27,7 @@ export const adminProductSelectSchema = createSelectSchema(product)
         variantOptions: z.array(
           optionValueSelectSchema.omit({id: true, optionId: true, value: true}).extend({
             option: optionSelectSchema.optional(),
-            optionValue: optionValueSelectSchema.omit({id: true, optionId: true}).extend({
+            optionValue: optionValueSelectSchema.omit({optionId: true}).extend({
               value: z.string().min(1, 'Option value cannot be empty'),
             }),
           })

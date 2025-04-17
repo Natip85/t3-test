@@ -11,9 +11,10 @@ import {formatCurrency} from '@/lib/formatters'
 import {Textarea} from '@/ui/textarea'
 import {api} from '@/trpc/react'
 import {useRouter} from 'next/navigation'
-import {Loader2, Plus, Trash2} from 'lucide-react'
+import {ArrowLeft, Loader2, Plus, Trash2} from 'lucide-react'
 import {useEffect} from 'react'
 import {useToast} from '@/hooks/use-toast'
+import VariantOptionsTable from './variants-options-table'
 interface Props {
   product?: Product
 }
@@ -39,6 +40,10 @@ export default function CreateProductForm({product}: Props) {
     } else {
       const res = await create(values)
       router.push(`/admin/products/${res.productId}`)
+      toast({
+        title: 'Product Created!',
+        description: 'Your product was created successfully.',
+      })
     }
   }
 
@@ -66,137 +71,148 @@ export default function CreateProductForm({product}: Props) {
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='mx-auto max-w-3xl space-y-8 py-10'>
-        <FormField
-          control={form.control}
-          name='name'
-          render={({field}) => (
-            <FormItem>
-              <FormLabel>Name</FormLabel>
-              <FormControl>
-                <Input placeholder='Name...' type='text' {...field} />
-              </FormControl>
-              <FormDescription>This is the public product name.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name='description'
-          render={({field}) => (
-            <FormItem>
-              <FormLabel htmlFor='description'>Description</FormLabel>
-              <FormControl>
-                <Textarea
-                  id='description'
-                  {...field}
-                  value={field.value ?? ''}
-                  placeholder='Description'
-                  className='resize-none'
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name='price'
-          render={({field}) => (
-            <FormItem>
-              <FormLabel>Price</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder='$0.00'
-                  type='number'
-                  {...field}
-                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : '')}
-                />
-              </FormControl>
-              <FormDescription>
-                The price in cents (e.g., $10.00 = 1000).
-                <br />
-                <span className='text-base'>{formatCurrency((form.getValues('price') || 0) / 100)}</span>
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name='stockQuantity'
-          render={({field}) => (
-            <FormItem>
-              <FormLabel>Stock quantity</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder='Quantity...'
-                  type='number'
-                  {...field}
-                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : '')}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        {variantFields.length > 0 && <h2 className='text-xl font-bold'>Variants</h2>}
-        {variantFields.map((variantField, variantIndex) => (
-          <div key={variantField.id} className='relative space-y-4 rounded-md border p-4 pt-10'>
-            <FormField
-              control={form.control}
-              name={`variants.${variantIndex}.name`}
-              render={({field}) => (
-                <FormItem>
-                  <FormLabel>Variant Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder='e.g., Color, Size' {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+    <>
+      <div>
+        <Button type='button' onClick={() => router.back()}>
+          <ArrowLeft />
+        </Button>
+      </div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className='mx-auto max-w-3xl space-y-8 py-10'>
+          <FormField
+            control={form.control}
+            name='name'
+            render={({field}) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input placeholder='Name...' type='text' {...field} />
+                </FormControl>
+                <FormDescription>This is the public product name.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='description'
+            render={({field}) => (
+              <FormItem>
+                <FormLabel htmlFor='description'>Description</FormLabel>
+                <FormControl>
+                  <Textarea
+                    id='description'
+                    {...field}
+                    value={field.value ?? ''}
+                    placeholder='Description'
+                    className='resize-none'
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='price'
+            render={({field}) => (
+              <FormItem>
+                <FormLabel>Price</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder='$0.00'
+                    type='number'
+                    {...field}
+                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : '')}
+                  />
+                </FormControl>
+                <FormDescription>
+                  The price in cents (e.g., $10.00 = 1000).
+                  <br />
+                  <span className='text-base'>{formatCurrency((form.getValues('price') || 0) / 100)}</span>
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='stockQuantity'
+            render={({field}) => (
+              <FormItem>
+                <FormLabel>Stock quantity</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder='Quantity...'
+                    type='number'
+                    {...field}
+                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : '')}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {variantFields.length > 0 && <h2 className='text-xl font-bold'>Variants</h2>}
+          {variantFields.map((variantField, variantIndex) => (
+            <div key={variantField.id} className='relative space-y-4 rounded-md border p-4 pt-10'>
+              <FormField
+                control={form.control}
+                name={`variants.${variantIndex}.name`}
+                render={({field}) => (
+                  <FormItem>
+                    <FormLabel>Variant Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder='e.g., Color, Size' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <div className='space-y-2'>
-              <FormLabel className='font-medium'>Variant Options</FormLabel>
-              <OptionFields nestIndex={variantIndex} form={form} />
+              <div className='space-y-2'>
+                <FormLabel className='font-medium'>Variant Options</FormLabel>
+                <OptionFields nestIndex={variantIndex} form={form} />
+              </div>
+
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                onClick={() => removeVariant(variantIndex)}
+                className='absolute right-4 top-0'
+              >
+                <Trash2 />
+              </Button>
             </div>
+          ))}
+          <Button type='button' onClick={addVariant}>
+            <Plus /> variant
+          </Button>
 
-            <Button
-              type='button'
-              variant='outline'
-              size='sm'
-              onClick={() => removeVariant(variantIndex)}
-              className='absolute right-4 top-0'
-            >
-              <Trash2 />
+          {product && <VariantOptionsTable product={product} />}
+
+          <div className='flex justify-end gap-3 pt-10'>
+            <Button variant={'destructive'}>Delete</Button>
+            <Button type='submit' disabled={isLoading || isUpdateLoading}>
+              {isLoading ? (
+                <span className='flex items-center gap-2'>
+                  <Loader2 className='animate-spin' /> Creating...
+                </span>
+              ) : isUpdateLoading ? (
+                <span className='flex items-center gap-2'>
+                  <Loader2 className='animate-spin' /> Updating...
+                </span>
+              ) : product ? (
+                'Update'
+              ) : (
+                'Create'
+              )}
             </Button>
           </div>
-        ))}
-        <Button type='button' onClick={addVariant}>
-          <Plus /> variant
-        </Button>
-        <div className='pt-10'>
-          <Button type='submit' disabled={isLoading || isUpdateLoading}>
-            {isLoading ? (
-              <span className='flex items-center gap-2'>
-                <Loader2 className='animate-spin' /> Creating...
-              </span>
-            ) : isUpdateLoading ? (
-              <span className='flex items-center gap-2'>
-                <Loader2 className='animate-spin' /> Updating...
-              </span>
-            ) : product ? (
-              'Update'
-            ) : (
-              'Create'
-            )}
-          </Button>
-        </div>
-      </form>
-    </Form>
+        </form>
+      </Form>
+    </>
   )
 }
 
@@ -260,7 +276,7 @@ function OptionFields({nestIndex, form}: {nestIndex: number; form: UseFormReturn
           onClick={() =>
             append({
               option: {id: 0, name: variantName},
-              optionValue: {value: ''},
+              optionValue: {id: 0, value: ''},
             })
           }
         >

@@ -51,7 +51,7 @@ export const productsRouter = createTRPCRouter({
                 },
                 optionValue: {
                   columns: {
-                    id: false,
+                    id: true,
                     value: true,
                   },
                 },

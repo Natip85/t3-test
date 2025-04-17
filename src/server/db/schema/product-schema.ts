@@ -54,7 +54,7 @@ export const option = Utils.createTable(
   'option',
   {
     id: serial('id').primaryKey().notNull(),
-    name: Utils.chars('name').notNull().unique(), // Example: Color, Size, etc.
+    name: Utils.chars('name').notNull(), // Example: Color, Size, etc.
   },
   (table) => ({
     optionNameIdx: index('option_name_idx').on(table.name),
