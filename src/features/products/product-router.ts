@@ -1,19 +1,19 @@
 import {TRPCError} from '@trpc/server'
-import {desc, eq, inArray, and, not} from 'drizzle-orm'
+import {desc, eq, inArray, and} from 'drizzle-orm'
 
 import {createTRPCRouter, protectedProcedure} from '@/server/api/trpc'
 
 import {hasPermission} from '@/lib/permissions'
 import {
-  option as optionTable,
-  optionValue as optionValueTable,
-  product as productTable,
-  variant as variantTable,
-  variantOption as variantOptionTable,
+  productOptions as optionTable,
+  optionValues as optionValueTable,
+  products as productTable,
+  variants as variantTable,
+  variantOptionValues as variantOptionTable,
 } from '@/server/db/schema'
 import {z} from 'zod'
 import {adminProductSelectSchema} from './product-types'
-import {v4 as uuidv4} from 'uuid'
+import {generateSKU} from '@/lib/utils'
 
 export const productsRouter = createTRPCRouter({
   getAll: protectedProcedure.query(async ({ctx}) => {
@@ -25,38 +25,42 @@ export const productsRouter = createTRPCRouter({
       throw new TRPCError({code: 'UNAUTHORIZED'})
     }
 
-    return await ctx.db.query.product.findMany({
+    return await ctx.db.query.products.findMany({
       orderBy: desc(productTable.price),
-      with: {variants: {with: {variantOptions: {with: {option: true, optionValue: true}}}}},
+      with: {
+        variants: {
+          with: {
+            values: {
+              with: {
+                value: {with: {option: true}},
+              },
+            },
+          },
+        },
+        options: {
+          with: {
+            values: true,
+          },
+        },
+      },
     })
   }),
   getById: protectedProcedure.input(z.number()).query(async ({ctx, input}) => {
-    const data = await ctx.db.query.product.findFirst({
+    const data = await ctx.db.query.products.findFirst({
       where: eq(productTable.id, input),
       with: {
         variants: {
           with: {
-            variantOptions: {
-              columns: {
-                variantId: false,
-                optionId: false,
-                optionValueId: false,
-              },
+            values: {
               with: {
-                option: {
-                  columns: {
-                    id: true,
-                    name: true,
-                  },
-                },
-                optionValue: {
-                  columns: {
-                    id: false,
-                    value: true,
-                  },
-                },
+                value: {with: {option: true}},
               },
             },
+          },
+        },
+        options: {
+          with: {
+            values: true,
           },
         },
       },
@@ -75,77 +79,92 @@ export const productsRouter = createTRPCRouter({
     }
 
     return ctx.db.transaction(async (tx) => {
-      // // Create the product
-      const [newProduct] = await tx
-        .insert(productTable)
-        .values({
-          name: input.name,
-          description: input.description,
-          price: input.price,
-          stockQuantity: input.stockQuantity,
-        })
-        .returning()
+      const {name, price, description, stockQuantity, options} = input
 
+      const [newProduct] = await tx.insert(productTable).values({name, description, price, stockQuantity}).returning()
       if (!newProduct) {
-        throw new TRPCError({code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create product'})
+        throw new TRPCError({code: 'INTERNAL_SERVER_ERROR', message: 'Product creation failed'})
       }
 
-      // Handle variants if provided
-      if (input.variants && input.variants.length > 0) {
-        for (const v of input.variants) {
-          const sku = `PROD-${uuidv4()}`
+      if (!options || options.length === 0) {
+        // No variants, just return the product
+        return newProduct
+      }
 
-          const [newVariant] = await tx
-            .insert(variantTable)
-            .values({
-              productId: newProduct.id,
-              name: v.name,
-              sku,
-              price: input.price,
-              stockQuantity: input.stockQuantity,
-            })
-            .returning()
+      const allOptionValueGroups: {optionId: number; values: {id: number; value: string}[]}[] = []
 
-          if (!newVariant) {
-            throw new TRPCError({code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create variant'})
-          }
+      for (const opt of options) {
+        const [newOption] = await tx
+          .insert(optionTable)
+          .values({
+            name: opt.name,
+            productId: newProduct.id,
+          })
+          .returning()
+        if (!newOption) {
+          throw new TRPCError({code: 'INTERNAL_SERVER_ERROR', message: 'Option creation failed'})
+        }
 
-          // Create an option entry if it doesn't exist
-          const [newOption] = await tx.insert(optionTable).values({name: v.name}).returning()
+        const insertedValues = await tx
+          .insert(optionValueTable)
+          .values(
+            opt.values.map((val) => ({
+              value: val.value,
+              optionId: newOption.id,
+            }))
+          )
+          .returning()
 
-          if (!newOption) {
-            tx.rollback()
-            throw new TRPCError({code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create option'})
-          }
+        allOptionValueGroups.push({
+          optionId: newOption.id,
+          values: insertedValues.map((val) => {
+            if (val.value === null) {
+              throw new TRPCError({code: 'INTERNAL_SERVER_ERROR', message: 'Option value is null'})
+            }
+            return {
+              id: val.id,
+              value: val.value,
+            }
+          }),
+        })
+      }
 
-          if (v.variantOptions && v.variantOptions.length > 0) {
-            const newOptionValues = await tx
-              .insert(optionValueTable)
-              .values(
-                v.variantOptions.map((o) => ({
-                  value: o.optionValue.value,
-                  optionId: newOption.id,
-                }))
-              )
-              .returning()
-            await tx.insert(variantOptionTable).values(
-              newOptionValues.map((ov) => ({
-                variantId: newVariant.id,
-                optionId: newOption.id,
-                optionValueId: ov.id,
-              }))
-            )
-          }
+      const combinations = cartesianProduct(allOptionValueGroups.map((group) => group.values))
+
+      for (const combo of combinations) {
+        const [newVariant] = await tx
+          .insert(variantTable)
+          .values({
+            productId: newProduct.id,
+            price: '1.90',
+            stock: 10,
+            sku: generateSKU(combo.map((v) => v.value)),
+          })
+          .returning()
+
+        if (!newVariant) {
+          throw new TRPCError({code: 'INTERNAL_SERVER_ERROR', message: 'Variant creation failed'})
+        }
+
+        if (combo.length > 0) {
+          await tx.insert(variantOptionTable).values(
+            combo.map((val) => ({
+              variantId: newVariant.id,
+              optionValueId: val.id,
+            }))
+          )
         }
       }
 
-      return {success: true, productId: newProduct.id}
+      return newProduct
     })
   }),
 
   updateProduct: protectedProcedure
     .input(adminProductSelectSchema.extend({id: z.number()}))
     .mutation(async ({ctx, input}) => {
+      console.log('updateProduct input: ', input)
+
       const user = ctx.session?.user
 
       if (!user) {
@@ -160,124 +179,191 @@ export const productsRouter = createTRPCRouter({
       }
 
       return ctx.db.transaction(async (tx) => {
-        // Update the main product
-        await tx
+        const updatedProduct = await tx
           .update(productTable)
           .set({
             name: input.name,
             description: input.description,
             price: input.price,
-            stockQuantity: input.stockQuantity,
           })
           .where(eq(productTable.id, input.id))
+          .returning()
 
-        const inputVariantIds = input.variants.map((v) => v.id).filter(Boolean)
+        if (!updatedProduct) {
+          throw new TRPCError({code: 'INTERNAL_SERVER_ERROR', message: 'Product update failed'})
+        }
 
-        // Delete removed variants
-        await tx
-          .delete(variantTable)
-          .where(and(eq(variantTable.productId, input.id), not(inArray(variantTable.id, inputVariantIds))))
+        if (input.options.length === 0) {
+          console.log('No options provided, deleting all options and variants')
+          const existingOptions = await tx.query.productOptions.findMany({
+            where: eq(optionTable.productId, input.id),
+          })
 
-        // Handle each variant
-        for (const variant of input.variants) {
-          let variantId = variant.id
+          const existingOptionIds = existingOptions.map((opt) => opt.id)
 
-          if (variant.id) {
-            // Update existing variant
-            await tx.update(variantTable).set({name: variant.name}).where(eq(variantTable.id, variant.id))
-          } else {
-            // Insert new variant
-            const sku = `PROD-${uuidv4()}`
+          if (existingOptionIds.length > 0) {
+            console.log('Deleting option values and options for option IDs:', existingOptionIds)
+            await tx.delete(optionValueTable).where(inArray(optionValueTable.optionId, existingOptionIds))
+            await tx.delete(optionTable).where(inArray(optionTable.id, existingOptionIds))
+          }
 
-            const [newVariant] = await tx
-              .insert(variantTable)
+          const existingVariants = await tx.query.variants.findMany({
+            where: eq(variantTable.productId, input.id),
+          })
+
+          for (const variant of existingVariants) {
+            console.log('Deleting variant SKU (no options case):', variant.sku)
+            await tx.delete(variantOptionTable).where(eq(variantOptionTable.variantId, variant.id))
+            await tx.delete(variantTable).where(eq(variantTable.id, variant.id))
+          }
+
+          return {success: true, productId: input.id}
+        }
+
+        const existingOptions = await tx.query.productOptions.findMany({
+          where: eq(optionTable.productId, input.id),
+        })
+        const existingOptionIds = existingOptions.map((opt) => opt.id)
+        const existingValues = await tx.query.optionValues.findMany({
+          where: inArray(optionValueTable.optionId, existingOptionIds),
+        })
+
+        const inputOptionIds = input.options.map((opt) => opt.id).filter(Boolean)
+        const inputValueIds = input.options.flatMap((opt) => opt.values.map((val) => val.id).filter(Boolean))
+
+        const valueIdsToDelete = existingValues.filter((val) => !inputValueIds.includes(val.id)).map((val) => val.id)
+        if (valueIdsToDelete.length > 0) {
+          await tx.delete(optionValueTable).where(inArray(optionValueTable.id, valueIdsToDelete))
+        }
+
+        const optionIdsToDelete = existingOptions.filter((opt) => !inputOptionIds.includes(opt.id)).map((opt) => opt.id)
+        if (optionIdsToDelete.length > 0) {
+          await tx.delete(optionTable).where(inArray(optionTable.id, optionIdsToDelete))
+        }
+
+        const updatedOptionValueIds: number[] = []
+        for (const opt of input.options) {
+          let currentOptionId = opt.id
+
+          const existingOption = await tx.query.productOptions.findFirst({
+            where: and(eq(optionTable.productId, input.id), eq(optionTable.id, opt.id)),
+          })
+
+          if (!existingOption) {
+            const newOption = await tx
+              .insert(optionTable)
               .values({
-                price: variant.price,
-                stockQuantity: variant.stockQuantity,
-                sku,
-                name: variant.name,
+                name: opt.name,
                 productId: input.id,
               })
               .returning()
-
-            if (!newVariant) {
-              tx.rollback()
-              throw new TRPCError({
-                code: 'INTERNAL_SERVER_ERROR',
-                message: 'Failed to insert new variant',
-              })
-            }
-
-            variantId = newVariant.id
-          }
-
-          // Remove old variant options for this variant
-          await tx.delete(variantOptionTable).where(eq(variantOptionTable.variantId, variantId))
-
-          // Reinsert variant options and values
-          for (const variantOption of variant.variantOptions) {
-            const [newOption] = await tx.insert(optionTable).values({name: variantOption.option!.name}).returning()
+              .then((res) => res[0])
 
             if (!newOption) {
-              tx.rollback()
-              throw new TRPCError({
-                code: 'INTERNAL_SERVER_ERROR',
-                message: 'Failed to create option',
-              })
+              throw new TRPCError({code: 'INTERNAL_SERVER_ERROR', message: 'Option creation failed'})
             }
-            type OptionValue = {value: string}
 
-            const newOptionValues = await tx
-              .insert(optionValueTable)
-              .values(
-                Array.isArray(variantOption.optionValue)
-                  ? (variantOption.optionValue as OptionValue[]).map((ov) => ({
-                      value: ov.value,
-                      optionId: newOption.id,
-                    }))
-                  : [
-                      {
-                        value: (variantOption.optionValue as OptionValue).value,
-                        optionId: newOption.id,
-                      },
-                    ]
+            currentOptionId = newOption.id
+          } else {
+            await tx.update(optionTable).set({name: opt.name}).where(eq(optionTable.id, opt.id))
+          }
+
+          for (const val of opt.values) {
+            const existingValue = await tx.query.optionValues.findFirst({
+              where: and(eq(optionValueTable.optionId, currentOptionId), eq(optionValueTable.id, val.id)),
+            })
+
+            if (!existingValue) {
+              const newValue = await tx
+                .insert(optionValueTable)
+                .values({
+                  value: val.value,
+                  optionId: currentOptionId,
+                })
+                .returning()
+                .then((res) => res[0])
+
+              if (newValue) updatedOptionValueIds.push(newValue.id)
+            } else {
+              await tx.update(optionValueTable).set({value: val.value}).where(eq(optionValueTable.id, val.id))
+              updatedOptionValueIds.push(val.id)
+            }
+          }
+        }
+
+        const allOptionValueGroups = input.options.map((opt) =>
+          opt.values.map((val) => ({...val, id: val.id || updatedOptionValueIds.find(() => true)}))
+        )
+        const combinations = cartesianProduct(allOptionValueGroups)
+
+        const existingVariants = await tx.query.variants.findMany({
+          where: eq(variantTable.productId, input.id),
+        })
+
+        const existingVariantSKUs = new Set(existingVariants.map((v) => v.sku))
+        const variantSKUsToKeep = new Set(combinations.map((combo) => generateSKU(combo.map((v) => v.value))))
+
+        for (const variant of existingVariants) {
+          if (!variantSKUsToKeep.has(variant.sku)) {
+            await tx.delete(variantOptionTable).where(eq(variantOptionTable.variantId, variant.id))
+            await tx.delete(variantTable).where(eq(variantTable.id, variant.id))
+          }
+        }
+
+        for (const combo of combinations) {
+          const sku = generateSKU(combo.map((v) => v.value))
+
+          if (existingVariantSKUs.has(sku)) {
+            const existingVariant = existingVariants.find((v) => v.sku === sku)
+
+            if (existingVariant) {
+              await tx.delete(variantOptionTable).where(eq(variantOptionTable.variantId, existingVariant.id))
+
+              await tx.insert(variantOptionTable).values(
+                combo.map((val) => ({
+                  variantId: existingVariant.id,
+                  optionValueId: val.id,
+                }))
               )
+
+              await tx
+                .update(variantTable)
+                .set({
+                  price: input.price,
+                  stock: 10,
+                })
+                .where(eq(variantTable.id, existingVariant.id))
+            }
+          } else {
+            const newVariant = await tx
+              .insert(variantTable)
+              .values({
+                productId: input.id,
+                price: input.price,
+                stock: 10,
+                sku,
+              })
               .returning()
+              .then((res) => res[0])
+
+            if (!newVariant) {
+              throw new TRPCError({code: 'INTERNAL_SERVER_ERROR', message: 'Variant creation failed'})
+            }
 
             await tx.insert(variantOptionTable).values(
-              newOptionValues.map((ov) => ({
-                variantId,
-                optionId: newOption.id,
-                optionValueId: ov.id,
+              combo.map((val) => ({
+                variantId: newVariant.id,
+                optionValueId: val.id,
               }))
             )
           }
         }
 
-        // Clean up orphaned option values and options
-        const remainingVariantIds = (
-          await tx.select({id: variantTable.id}).from(variantTable).where(eq(variantTable.productId, input.id))
-        ).map((v) => v.id)
-
-        const usedOptionValueIds = (
-          await tx
-            .select({optionValueId: variantOptionTable.optionValueId})
-            .from(variantOptionTable)
-            .where(inArray(variantOptionTable.variantId, remainingVariantIds))
-        ).map((row) => row.optionValueId)
-
-        await tx.delete(optionValueTable).where(not(inArray(optionValueTable.id, usedOptionValueIds)))
-
-        const usedOptionIds = (
-          await tx
-            .select({optionId: variantOptionTable.optionId})
-            .from(variantOptionTable)
-            .where(inArray(variantOptionTable.variantId, remainingVariantIds))
-        ).map((row) => row.optionId)
-
-        await tx.delete(optionTable).where(not(inArray(optionTable.id, usedOptionIds)))
-
         return {success: true, productId: input.id}
       })
     }),
 })
+
+function cartesianProduct<T>(arr: T[][]): T[][] {
+  return arr.reduce<T[][]>((a, b) => a.flatMap((d) => b.map((e) => [...d, e])), [[]])
+}
