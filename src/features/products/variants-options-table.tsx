@@ -6,12 +6,14 @@ interface Props {
 }
 
 export default function VariantOptionsTable({product, onOptionClick}: Props) {
-  // Create a 2D array where each row represents a variant's options
-  const data = product?.variants.map((variant) => variant.variantOptions.map((option) => option)) || []
+  console.log({product}, {onOptionClick})
 
-  if (data.length === 0) {
-    return <div className='text-muted-foreground'>No variant options available</div>
-  }
+  // Create a 2D array where each row represents a variant's options
+  // const data = product?.variants.map((variant) => variant.variantOptions.map((option) => option)) || []
+
+  // if (data.length === 0) {
+  //   return <div className='text-muted-foreground'>No variant options available</div>
+  // }
 
   // Handle option click
   // const handleOptionClick = (item: any, e: React.MouseEvent) => {

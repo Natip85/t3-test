@@ -12,7 +12,6 @@ import {Textarea} from '@/ui/textarea'
 import {api} from '@/trpc/react'
 import {useRouter} from 'next/navigation'
 import {ArrowLeft, Loader2, Plus, Trash2} from 'lucide-react'
-import {useEffect} from 'react'
 import {useToast} from '@/hooks/use-toast'
 import VariantOptionsTable from './variants-options-table'
 interface Props {
@@ -39,7 +38,7 @@ export default function CreateProductForm({product}: Props) {
       })
     } else {
       const res = await create(values)
-      router.push(`/admin/products/${res.productId}`)
+      router.push(`/admin/products/${res.id}`)
       toast({
         title: 'Product Created!',
         description: 'Your product was created successfully.',
@@ -48,27 +47,24 @@ export default function CreateProductForm({product}: Props) {
   }
 
   const {
-    fields: variantFields,
-    append: appendVariant,
-    remove: removeVariant,
+    fields: optionFields,
+    append: appendOption,
+    remove: removeOption,
   } = useFieldArray({
     control: form.control,
-    name: 'variants',
+    name: 'options',
   })
 
   const addVariant = () => {
-    appendVariant({
+    appendOption({
       id: 0,
       name: '',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      price: 0,
-      stockQuantity: 0,
-      productId: 0,
-      sku: '',
-      variantOptions: [],
+      productId: product?.id || null,
+      values: [],
     })
   }
+  console.log('watch: ', form.watch())
+  console.log('errors: ', form.formState.errors)
 
   return (
     <>
@@ -119,17 +115,12 @@ export default function CreateProductForm({product}: Props) {
               <FormItem>
                 <FormLabel>Price</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder='$0.00'
-                    type='number'
-                    {...field}
-                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : '')}
-                  />
+                  <Input placeholder='$0.00' {...field} onChange={(e) => field.onChange(e.target.value)} />
                 </FormControl>
                 <FormDescription>
                   The price in cents (e.g., $10.00 = 1000).
                   <br />
-                  <span className='text-base'>{formatCurrency((form.getValues('price') || 0) / 100)}</span>
+                  <span className='text-base'>{formatCurrency(form.getValues('price') || 0)}</span>
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -153,12 +144,12 @@ export default function CreateProductForm({product}: Props) {
               </FormItem>
             )}
           />
-          {variantFields.length > 0 && <h2 className='text-xl font-bold'>Variants</h2>}
-          {variantFields.map((variantField, variantIndex) => (
-            <div key={variantField.id} className='relative space-y-4 rounded-md border p-4 pt-10'>
+          {optionFields.length > 0 && <h2 className='text-xl font-bold'>Variants</h2>}
+          {optionFields.map((optionField, optionIndex) => (
+            <div key={optionField.id} className='relative space-y-4 rounded-md border p-4 pt-10'>
               <FormField
                 control={form.control}
-                name={`variants.${variantIndex}.name`}
+                name={`options.${optionIndex}.name`}
                 render={({field}) => (
                   <FormItem>
                     <FormLabel>Variant Name</FormLabel>
@@ -172,14 +163,14 @@ export default function CreateProductForm({product}: Props) {
 
               <div className='space-y-2'>
                 <FormLabel className='font-medium'>Variant Options</FormLabel>
-                <OptionFields nestIndex={variantIndex} form={form} />
+                <OptionFields nestIndex={optionIndex} form={form} product={product} />
               </div>
 
               <Button
                 type='button'
                 variant='outline'
                 size='sm'
-                onClick={() => removeVariant(variantIndex)}
+                onClick={() => removeOption(optionIndex)}
                 className='absolute right-4 top-0'
               >
                 <Trash2 />
@@ -216,23 +207,19 @@ export default function CreateProductForm({product}: Props) {
   )
 }
 
-function OptionFields({nestIndex, form}: {nestIndex: number; form: UseFormReturn<AdminProductSelect>}) {
+function OptionFields({
+  product,
+  nestIndex,
+  form,
+}: {
+  product?: Product
+  nestIndex: number
+  form: UseFormReturn<AdminProductSelect>
+}) {
   const {fields, append, remove} = useFieldArray({
     control: form.control,
-    name: `variants.${nestIndex}.variantOptions`,
+    name: `options.${nestIndex}.values`,
   })
-  const variantName = form.watch(`variants.${nestIndex}.name`)
-  useEffect(() => {
-    // Get current options
-    const currentOptions = form.getValues(`variants.${nestIndex}.variantOptions`) || []
-
-    // Update each option's name to match the variant name
-    currentOptions.forEach((_, optionIndex) => {
-      form.setValue(`variants.${nestIndex}.variantOptions.${optionIndex}.option.name`, variantName, {
-        shouldDirty: true,
-      })
-    })
-  }, [variantName, form, nestIndex])
   return (
     <div className='space-y-2'>
       {fields.map((field, index) => {
@@ -240,7 +227,7 @@ function OptionFields({nestIndex, form}: {nestIndex: number; form: UseFormReturn
           <div key={field.id} className='flex gap-2'>
             <FormField
               control={form.control}
-              name={`variants.${nestIndex}.variantOptions.${index}.option.id`}
+              name={`options.${nestIndex}.values.${index}.value`}
               render={({field}) => (
                 <FormItem className='hidden flex-grow'>
                   <FormControl>
@@ -252,7 +239,7 @@ function OptionFields({nestIndex, form}: {nestIndex: number; form: UseFormReturn
             />
             <FormField
               control={form.control}
-              name={`variants.${nestIndex}.variantOptions.${index}.optionValue.value`}
+              name={`options.${nestIndex}.values.${index}.value`}
               render={({field}) => (
                 <FormItem className='flex-grow'>
                   <FormControl>
@@ -275,8 +262,9 @@ function OptionFields({nestIndex, form}: {nestIndex: number; form: UseFormReturn
           size='sm'
           onClick={() =>
             append({
-              option: {id: 0, name: variantName},
-              optionValue: {id: 0, value: ''},
+              id: 0,
+              value: '',
+              optionId: product?.id || null,
             })
           }
         >

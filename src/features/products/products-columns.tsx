@@ -21,7 +21,7 @@ export const columns: ColumnDef<ProductSelect>[] = [
   {
     accessorKey: 'price',
     header: ({column}) => <DataTableColumnHeader column={column} title='Price' />,
-    cell: ({row}) => <div>{formatCurrency((row.original.price || 0) / 100)}</div>,
+    cell: ({row}) => <div>{formatCurrency(row.original.price || 0)}</div>,
   },
   {
     accessorKey: 'stockQuantity',
