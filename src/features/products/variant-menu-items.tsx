@@ -9,7 +9,6 @@ interface Props {
   variantId: string
 }
 export default function VariantMenuItems({variants, variantId}: Props) {
-  const firstVarImg = variants.flatMap((item) => item.assets)
   return (
     <div className='flex flex-col gap-2 rounded-md border p-2'>
       <div className='flex items-center gap-3'>

@@ -54,6 +54,9 @@ export const assetsRouter = createTRPCRouter({
         const asset = await tx.query.assets.findFirst({
           where: (assets, {eq}) => eq(assets.id, id),
         })
+        if (!asset) {
+          tx.rollback()
+        }
         // if (!asset || !hasPermission(user, 'assets', 'edit', asset)) {
         //   tx.rollback()
         // }
