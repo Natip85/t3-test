@@ -1,5 +1,5 @@
 {
-  "id": "7ce7d792-2045-4ef1-be94-72d0ce690950",
+  "id": "929d58cb-0865-4ecf-af9f-2232b92c06ba",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -810,14 +810,14 @@
           "name": "price",
           "type": "numeric(10, 2)",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "'0'"
         },
         "stock": {
           "name": "stock",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": 0
         }
       },

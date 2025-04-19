@@ -91,8 +91,8 @@ CREATE TABLE "variants" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"product_id" integer,
 	"sku" varchar(50) NOT NULL,
-	"price" numeric(10, 2) DEFAULT '0',
-	"stock" integer DEFAULT 0
+	"price" numeric(10, 2) DEFAULT '0' NOT NULL,
+	"stock" integer DEFAULT 0 NOT NULL
 );
 --> statement-breakpoint
 ALTER TABLE "auth_account" ADD CONSTRAINT "auth_account_user_id_auth_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."auth_user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
