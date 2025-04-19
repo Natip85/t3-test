@@ -23,11 +23,10 @@ export default async function AddProductPage({params}: Props) {
     )
   }
 
-  const product = await api.products.getById(parseInt((await params).id))
-
+  const [product, variants] = await Promise.all([api.products.getById(productId), api.products.getVariants(productId)])
   return (
     <div className='p-2 md:p-5'>
-      <CreateProductForm product={product} />
+      <CreateProductForm product={product} variants={variants} />
     </div>
   )
 }

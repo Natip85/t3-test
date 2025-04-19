@@ -6,22 +6,26 @@ import {zodResolver} from '@hookform/resolvers/zod'
 import {Button} from '@/components/ui/button'
 import {Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage} from '@/components/ui/form'
 import {Input} from '@/components/ui/input'
-import {type AdminProductSelect, adminProductSelectSchema, type Product} from './product-types'
+import {type AdminProductSelect, adminProductSelectSchema, type Product, type Variant} from './product-types'
 import {formatCurrency} from '@/lib/formatters'
 import {Textarea} from '@/ui/textarea'
 import {api} from '@/trpc/react'
 import {useRouter} from 'next/navigation'
-import {ArrowLeft, Loader2, Plus, Trash2} from 'lucide-react'
+import {ArrowLeft, Loader2, Plus, Trash2, X} from 'lucide-react'
 import {useToast} from '@/hooks/use-toast'
 import VariantOptionsTable from './variants-options-table'
+import {ProductImageInput} from './product-image-input'
+import Image from 'next/image'
 interface Props {
   product?: Product
+  variants?: Variant[]
 }
-export default function CreateProductForm({product}: Props) {
+export default function CreateProductForm({product, variants}: Props) {
   const router = useRouter()
   const {toast} = useToast()
   const {mutateAsync: create, isPending: isLoading} = api.products.createProduct.useMutation()
   const {mutateAsync: update, isPending: isUpdateLoading} = api.products.updateProduct.useMutation()
+  const {mutateAsync: deleteAsset, isPending: isDeleting} = api.assets.deleteAsset.useMutation()
 
   const form = useForm<AdminProductSelect>({
     resolver: zodResolver(adminProductSelectSchema),
@@ -63,13 +67,21 @@ export default function CreateProductForm({product}: Props) {
       values: [],
     })
   }
-  console.log('watch: ', form.watch())
-  console.log('errors: ', form.formState.errors)
 
+  const doDeleteAsset = async (assetId: number) => {
+    await deleteAsset({assetId}).catch((err) => {
+      console.error('Error deleting asset', err)
+    })
+    router.refresh()
+    toast({
+      title: 'Media deleted',
+      description: `The media was deleted successfully`,
+    })
+  }
   return (
     <div className='mx-auto max-w-3xl'>
       <div className='flex items-center gap-3'>
-        <Button type='button' size={'sm'} variant={'ghost'} onClick={() => router.back()}>
+        <Button type='button' size={'sm'} variant={'ghost'} onClick={() => router.push('/admin/products')}>
           <ArrowLeft />
         </Button>
         <h2 className='text-2xl md:text-4xl'> {product ? product.name : 'Add product'}</h2>
@@ -109,6 +121,30 @@ export default function CreateProductForm({product}: Props) {
               </FormItem>
             )}
           />
+          {product && (
+            <>
+              <h2 className='text-xl font-bold'>Media</h2>
+              <div className='grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4'>
+                {product?.assets.map((ass) => (
+                  <div key={ass.id} className='relative aspect-square size-full'>
+                    {isDeleting ? (
+                      <Loader2 className='absolute right-2 top-2 z-50 animate-spin text-destructive' />
+                    ) : (
+                      <X
+                        onClick={() => void doDeleteAsset(ass.asset.id)}
+                        className='absolute right-2 top-2 z-50 border bg-destructive/20 text-destructive shadow-md transition-colors hover:cursor-pointer hover:bg-destructive/40'
+                      />
+                    )}
+
+                    <Image src={ass.asset.fileInfo?.url ?? ''} fill alt='prod img' className='rounded-md' />
+                  </div>
+                ))}
+
+                <ProductImageInput productId={product?.id ?? 0} uploadImage={() => router.refresh()} />
+              </div>
+            </>
+          )}
+
           <FormField
             control={form.control}
             name='price'
@@ -122,6 +158,8 @@ export default function CreateProductForm({product}: Props) {
                   The price in cents (e.g., $10.00 = 1000).
                   <br />
                   <span className='text-base'>{formatCurrency(form.getValues('price') || 0)}</span>
+                  <br />
+                  <span>Any changes made here will reflect on all variants</span>
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -141,6 +179,7 @@ export default function CreateProductForm({product}: Props) {
                     onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : '')}
                   />
                 </FormControl>
+                <FormDescription>Any changes made here will reflect on all variants</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -182,11 +221,11 @@ export default function CreateProductForm({product}: Props) {
             <Plus /> variant
           </Button>
 
-          {product && <VariantOptionsTable product={product} />}
+          {product && <VariantOptionsTable product={product} variants={variants} />}
 
           <div className='flex justify-end gap-3 pt-10'>
             <Button variant={'destructive'}>Delete</Button>
-            <Button type='submit' disabled={isLoading || isUpdateLoading}>
+            <Button type='submit' disabled={isLoading || isUpdateLoading || !form.formState.isDirty}>
               {isLoading ? (
                 <span className='flex items-center gap-2'>
                   <Loader2 className='animate-spin' /> Creating...

@@ -7,11 +7,19 @@ import {Form, FormControl, FormDescription, FormField, FormItem, FormLabel, Form
 import {Input} from '@/ui/input'
 import {formatCurrency} from '@/lib/formatters'
 import {Button} from '@/ui/button'
+import {api} from '@/trpc/react'
+import {toast} from '@/hooks/use-toast'
+import {useRouter} from 'next/navigation'
+import {Loader2, X} from 'lucide-react'
+import {VariantImageInput} from './variant-image-input'
+import Image from 'next/image'
 interface Props {
   variant?: Variant
 }
 export default function VariantEditForm({variant}: Props) {
-  console.log('variant: ', variant)
+  const router = useRouter()
+  const {mutateAsync: update, isPending: isUpdateLoading} = api.products.editVariant.useMutation()
+  const {mutateAsync: deleteAsset, isPending: isDeleting} = api.assets.deleteAsset.useMutation()
 
   const form = useForm<AdminVariantSelect>({
     resolver: zodResolver(adminVariantSelectSchema),
@@ -19,11 +27,23 @@ export default function VariantEditForm({variant}: Props) {
   })
 
   async function onSubmit(values: AdminVariantSelect) {
-    console.log('values: ', values)
+    await update(values)
+    router.refresh()
+    toast({
+      title: 'Success',
+      description: 'Variant updated successfully',
+    })
   }
-  console.log('watch:', form.watch())
-  console.log('errors:', form.formState.errors)
-
+  const doDeleteAsset = async (assetId: number) => {
+    await deleteAsset({assetId}).catch((err) => {
+      console.error('Error deleting asset', err)
+    })
+    router.refresh()
+    toast({
+      title: 'Media deleted',
+      description: `The media was deleted successfully`,
+    })
+  }
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8 rounded-md border p-2 py-10'>
@@ -38,7 +58,7 @@ export default function VariantEditForm({variant}: Props) {
                   <FormLabel>{form.getValues(`value.${i}.value.option.name`)}</FormLabel>
 
                   <FormControl>
-                    <Input {...field} />
+                    <Input disabled {...field} />
                   </FormControl>
 
                   <FormMessage />
@@ -47,6 +67,23 @@ export default function VariantEditForm({variant}: Props) {
             />
           )
         })}
+        <div className='grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4'>
+          {variant?.assets.map((ass) => (
+            <div key={ass.id} className='relative aspect-square size-full'>
+              {isDeleting ? (
+                <Loader2 className='absolute right-2 top-2 z-50 animate-spin text-destructive' />
+              ) : (
+                <X
+                  onClick={() => void doDeleteAsset(ass.asset.id)}
+                  className='absolute right-2 top-2 z-50 border bg-destructive/20 text-destructive shadow-md transition-colors hover:cursor-pointer hover:bg-destructive/40'
+                />
+              )}
+
+              <Image src={ass.asset.fileInfo?.url ?? ''} fill alt='prod img' className='rounded-md' />
+            </div>
+          ))}
+          <VariantImageInput variantId={variant?.id ?? 0} uploadImage={() => router.refresh()} />
+        </div>
         <FormField
           control={form.control}
           name='price'
@@ -84,7 +121,15 @@ export default function VariantEditForm({variant}: Props) {
           )}
         />
         <div>
-          <Button>Submit</Button>
+          <Button type='submit' disabled={isUpdateLoading || !form.formState.isDirty}>
+            {isUpdateLoading ? (
+              <span className='flex items-center gap-2'>
+                <Loader2 className='animate-spin' /> Updating...
+              </span>
+            ) : (
+              <span>Update</span>
+            )}
+          </Button>
         </div>
       </form>
     </Form>

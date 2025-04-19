@@ -1,10 +1,11 @@
 import {auth} from '@/server/auth'
 import {createUploadthing, type FileRouter} from 'uploadthing/next'
 import {UploadThingError} from 'uploadthing/server'
-import {updateUserProfileImage} from '@/server/db/queries/asset-queries'
+import {insertProductImage, insertVariantImage, updateUserProfileImage} from '@/server/db/queries/asset-queries'
 import {env} from '@/env'
 import {api} from '@/trpc/server'
 import {utApi} from '@/server/uploadthing'
+import {z} from 'zod'
 
 const f = createUploadthing()
 
@@ -51,62 +52,102 @@ export const ourFileRouter: FileRouter = {
       // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
       return {uploadedBy: metadata.userId, imageUrl: image}
     }),
-  // incidentImage: f({
-  //   image: {
-  //     maxFileSize: '4MB',
-  //     maxFileCount: 1,
-  //   },
-  //   video: {
-  //     maxFileSize: '128MB',
-  //     maxFileCount: 1,
-  //   },
-  // })
-  //   .input(z.object({incidentId: z.number()}))
-  //   .middleware(async ({input}) => {
-  //     const [session, user] = await Promise.allSettled([auth(), api.users.getMe()])
+  productImage: f({
+    image: {
+      maxFileSize: '4MB',
+      maxFileCount: 1,
+    },
+  })
+    .input(z.object({productId: z.number()}))
+    .middleware(async ({input}) => {
+      const [session, user] = await Promise.allSettled([auth(), api.users.getMe()])
 
-  //     if (session.status === 'rejected' || user.status === 'rejected' || !session.value?.user) {
-  //       throw new UploadThingError('Unauthorized')
-  //     }
+      if (session.status === 'rejected' || user.status === 'rejected' || !session.value?.user) {
+        throw new UploadThingError('Unauthorized')
+      }
 
-  //     return {userId: session.value.user.id, incidentId: input.incidentId}
-  //   })
-  //   .onUploadComplete(async ({metadata, file}) => {
-  //     console.log('Upload complete for incidentId:', metadata.incidentId)
-  //     const url = `${env.ASSETS_PATH_PREFIX_V0}${file.key}`
-  //     const fileType = (file.type.split('/')[0] as 'image' | 'video') ?? ''
-  //     if (!['image', 'video'].includes(fileType)) {
-  //       console.error('Invalid file type', {metadata, file})
-  //       // TODO: delete the file from the bucket
-  //       throw new UploadThingError('Invalid file type')
-  //     }
+      return {userId: session.value.user.id, productId: input.productId}
+    })
+    .onUploadComplete(async ({metadata, file}) => {
+      console.log('Upload complete for productId:', metadata.productId)
+      const url = `${env.ASSETS_PATH_PREFIX_V0}${file.key}`
+      const fileType = (file.type.split('/')[0] as 'image' | 'video') ?? ''
+      if (!['image', 'video'].includes(fileType)) {
+        console.error('Invalid file type', {metadata, file})
+        // TODO: delete the file from the bucket
+        throw new UploadThingError('Invalid file type')
+      }
 
-  //     if (!metadata.incidentId) {
-  //       console.error('Incident ID is required', {metadata, file})
-  //       // TODO: delete the file from the bucket
-  //       throw new UploadThingError('Incident ID is required')
-  //     }
+      if (!metadata.productId) {
+        console.error('Product ID is required', {metadata, file})
+        // TODO: delete the file from the bucket
+        throw new UploadThingError('Product ID is required')
+      }
 
-  //     if (!metadata.userId) {
-  //       console.error('User ID is required', {metadata, file})
-  //       // TODO: delete the file from the bucket
-  //       throw new UploadThingError('User ID is required')
-  //     }
+      if (!metadata.userId) {
+        console.error('User ID is required', {metadata, file})
+        // TODO: delete the file from the bucket
+        throw new UploadThingError('User ID is required')
+      }
 
-  //     const {assetId} = await insertIncidentImage({
-  //       url,
-  //       incidentId: metadata.incidentId,
-  //       userId: metadata.userId,
-  //       type: fileType,
-  //       fileInfo: {
-  //         fileName: file.name,
-  //         fileType: file.type,
-  //         fileSize: file.size,
-  //       },
-  //     })
+      const {assetId} = await insertProductImage({
+        url,
+        productId: metadata.productId,
+        userId: metadata.userId,
+        type: fileType,
+        fileInfo: {...file},
+      })
 
-  //     return {imageUrl: url, assetId}
-  //   }),
+      return {imageUrl: url, assetId}
+    }),
+  variantImage: f({
+    image: {
+      maxFileSize: '4MB',
+      maxFileCount: 1,
+    },
+  })
+    .input(z.object({variantId: z.number()}))
+    .middleware(async ({input}) => {
+      const [session, user] = await Promise.allSettled([auth(), api.users.getMe()])
+
+      if (session.status === 'rejected' || user.status === 'rejected' || !session.value?.user) {
+        throw new UploadThingError('Unauthorized')
+      }
+
+      return {userId: session.value.user.id, variantId: input.variantId}
+    })
+    .onUploadComplete(async ({metadata, file}) => {
+      console.log('Upload complete for variantId:', metadata.variantId)
+      const url = `${env.ASSETS_PATH_PREFIX_V0}${file.key}`
+      const fileType = (file.type.split('/')[0] as 'image' | 'video') ?? ''
+      if (!['image', 'video'].includes(fileType)) {
+        console.error('Invalid file type', {metadata, file})
+        // TODO: delete the file from the bucket
+        throw new UploadThingError('Invalid file type')
+      }
+
+      if (!metadata.variantId) {
+        console.error('Variant ID is required', {metadata, file})
+        // TODO: delete the file from the bucket
+        throw new UploadThingError('Variant ID is required')
+      }
+
+      if (!metadata.userId) {
+        console.error('User ID is required', {metadata, file})
+        // TODO: delete the file from the bucket
+        throw new UploadThingError('User ID is required')
+      }
+
+      const {assetId} = await insertVariantImage({
+        url,
+        variantId: metadata.variantId,
+        userId: metadata.userId,
+        type: fileType,
+        fileInfo: {...file},
+      })
+
+      return {imageUrl: url, assetId}
+    }),
 }
 
 export type OurFileRouter = typeof ourFileRouter

@@ -7,5 +7,5 @@ export const UploadButton = generateUploadButton<OurFileRouter>()
 export const UploadDropzone = generateUploadDropzone<OurFileRouter>()
 
 export type ProfileImageUploadResponse = ClientUploadedFileData<{imageUrl: string}>[]
-// export type IncidentImageUploadResponseSingle = ClientUploadedFileData<{imageUrl: string; assetId: number}>
-// export type IncidentImageUploadResponse = IncidentImageUploadResponseSingle[]
+export type ProductImageUploadResponseSingle = ClientUploadedFileData<{imageUrl: string; assetId: number}>
+export type ProductImageUploadResponse = ProductImageUploadResponseSingle[]
