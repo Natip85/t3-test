@@ -53,8 +53,8 @@ export const variants = Utils.createTable(
     id: serial('id').primaryKey(),
     productId: integer('product_id').references(() => products.id, {onDelete: 'cascade'}),
     sku: varchar('sku', {length: 50}).notNull(),
-    price: numeric('price', {precision: 10, scale: 2}).default('0'),
-    stock: integer('stock').default(0),
+    price: numeric('price', {precision: 10, scale: 2}).default('0').notNull(),
+    stock: integer('stock').default(0).notNull(),
   },
   (table) => ({
     productIdIdx: index('variants_product_id_idx').on(table.productId),
@@ -94,7 +94,7 @@ export const optionValueRelations = relations(optionValues, ({one, many}) => ({
 
 export const variantRelations = relations(variants, ({one, many}) => ({
   product: one(products, {fields: [variants.productId], references: [products.id]}),
-  values: many(variantOptionValues),
+  value: many(variantOptionValues),
   cartItem: many(cartItem),
 }))
 

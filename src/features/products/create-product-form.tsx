@@ -67,14 +67,15 @@ export default function CreateProductForm({product}: Props) {
   console.log('errors: ', form.formState.errors)
 
   return (
-    <>
-      <div>
-        <Button type='button' onClick={() => router.back()}>
+    <div className='mx-auto max-w-3xl'>
+      <div className='flex items-center gap-3'>
+        <Button type='button' size={'sm'} variant={'ghost'} onClick={() => router.back()}>
           <ArrowLeft />
         </Button>
+        <h2 className='text-2xl md:text-4xl'> {product ? product.name : 'Add product'}</h2>
       </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className='mx-auto max-w-3xl space-y-8 py-10'>
+        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8 py-10'>
           <FormField
             control={form.control}
             name='name'
@@ -203,7 +204,7 @@ export default function CreateProductForm({product}: Props) {
           </div>
         </form>
       </Form>
-    </>
+    </div>
   )
 }
 

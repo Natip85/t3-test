@@ -30,7 +30,7 @@ export const productsRouter = createTRPCRouter({
       with: {
         variants: {
           with: {
-            values: {
+            value: {
               with: {
                 value: {with: {option: true}},
               },
@@ -51,7 +51,7 @@ export const productsRouter = createTRPCRouter({
       with: {
         variants: {
           with: {
-            values: {
+            value: {
               with: {
                 value: {with: {option: true}},
               },
@@ -65,7 +65,6 @@ export const productsRouter = createTRPCRouter({
         },
       },
     })
-
     return data
   }),
 
@@ -195,6 +194,7 @@ export const productsRouter = createTRPCRouter({
 
         if (input.options.length === 0) {
           console.log('No options provided, deleting all options and variants')
+
           const existingOptions = await tx.query.productOptions.findMany({
             where: eq(optionTable.productId, input.id),
           })
@@ -224,6 +224,7 @@ export const productsRouter = createTRPCRouter({
           where: eq(optionTable.productId, input.id),
         })
         const existingOptionIds = existingOptions.map((opt) => opt.id)
+
         const existingValues = await tx.query.optionValues.findMany({
           where: inArray(optionValueTable.optionId, existingOptionIds),
         })
@@ -241,7 +242,8 @@ export const productsRouter = createTRPCRouter({
           await tx.delete(optionTable).where(inArray(optionTable.id, optionIdsToDelete))
         }
 
-        const updatedOptionValueIds: number[] = []
+        const updatedOptionValueMap: Record<string, number> = {}
+
         for (const opt of input.options) {
           let currentOptionId = opt.id
 
@@ -269,6 +271,8 @@ export const productsRouter = createTRPCRouter({
           }
 
           for (const val of opt.values) {
+            const key = `${opt.name}-${val.value}`
+
             const existingValue = await tx.query.optionValues.findFirst({
               where: and(eq(optionValueTable.optionId, currentOptionId), eq(optionValueTable.id, val.id)),
             })
@@ -283,17 +287,32 @@ export const productsRouter = createTRPCRouter({
                 .returning()
                 .then((res) => res[0])
 
-              if (newValue) updatedOptionValueIds.push(newValue.id)
+              if (newValue) {
+                updatedOptionValueMap[key] = newValue.id
+              }
             } else {
               await tx.update(optionValueTable).set({value: val.value}).where(eq(optionValueTable.id, val.id))
-              updatedOptionValueIds.push(val.id)
+              updatedOptionValueMap[key] = val.id
             }
           }
         }
 
         const allOptionValueGroups = input.options.map((opt) =>
-          opt.values.map((val) => ({...val, id: val.id || updatedOptionValueIds.find(() => true)}))
+          opt.values.map((val) => {
+            const key = `${opt.name}-${val.value}`
+            const id = val.id || updatedOptionValueMap[key]
+
+            if (!id) {
+              throw new TRPCError({
+                code: 'INTERNAL_SERVER_ERROR',
+                message: `Missing ID for option value: ${val.value}`,
+              })
+            }
+
+            return {...val, id}
+          })
         )
+
         const combinations = cartesianProduct(allOptionValueGroups)
 
         const existingVariants = await tx.query.variants.findMany({
@@ -362,6 +381,25 @@ export const productsRouter = createTRPCRouter({
         return {success: true, productId: input.id}
       })
     }),
+  getVariants: protectedProcedure.input(z.number()).query(async ({ctx, input}) => {
+    const data = await ctx.db.query.variants.findMany({
+      where: eq(variantTable.productId, input),
+      with: {
+        product: true,
+        value: {with: {value: {with: {option: true}}}},
+      },
+    })
+    return data
+  }),
+  getVariantById: protectedProcedure.input(z.number()).query(async ({ctx, input}) => {
+    const data = await ctx.db.query.variants.findFirst({
+      where: eq(variantTable.id, input),
+      with: {
+        value: {with: {value: {with: {option: true}}}},
+      },
+    })
+    return data
+  }),
 })
 
 function cartesianProduct<T>(arr: T[][]): T[][] {
