@@ -165,8 +165,6 @@ export const productsRouter = createTRPCRouter({
   updateProduct: protectedProcedure
     .input(adminProductSelectSchema.extend({id: z.number()}))
     .mutation(async ({ctx, input}) => {
-      console.log('updateProduct input: ', input)
-
       const user = ctx.session?.user
 
       if (!user) {

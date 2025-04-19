@@ -6,7 +6,6 @@ import Link from 'next/link'
 
 export default async function AdminProductsPage() {
   const products = await api.products.getAll()
-  console.log({products})
 
   return (
     <div className='p-2 md:p-5'>

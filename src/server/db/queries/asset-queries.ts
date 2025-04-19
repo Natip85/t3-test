@@ -33,8 +33,6 @@ export const insertVariantImageProps = z.object({
 })
 
 export const insertProductImage = async (input: z.infer<typeof insertProductImageProps>) => {
-  console.log('insertProductImage>>>', input)
-
   return db.transaction(async (tx) => {
     const [asset] = await tx
       .insert(assets)
@@ -50,7 +48,6 @@ export const insertProductImage = async (input: z.infer<typeof insertProductImag
       tx.rollback()
       throw new Error('Failed to insert product images')
     }
-    console.log('insertProductImageAsetId>>>', asset.assetId)
 
     await tx.insert(productAsset).values({
       assetId: asset.assetId,
@@ -62,8 +59,6 @@ export const insertProductImage = async (input: z.infer<typeof insertProductImag
 }
 
 export const insertVariantImage = async (input: z.infer<typeof insertVariantImageProps>) => {
-  console.log('insertVariantImage>>>', input)
-
   return db.transaction(async (tx) => {
     const [asset] = await tx
       .insert(assets)
@@ -79,7 +74,6 @@ export const insertVariantImage = async (input: z.infer<typeof insertVariantImag
       tx.rollback()
       throw new Error('Failed to insert variant images')
     }
-    console.log('insertVariantImageAsetId>>>', asset.assetId)
 
     await tx.insert(variantAsset).values({
       assetId: asset.assetId,
