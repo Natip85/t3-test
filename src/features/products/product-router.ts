@@ -12,7 +12,7 @@ import {
   variantOptionValues as variantOptionTable,
 } from '@/server/db/schema'
 import {z} from 'zod'
-import {adminProductSelectSchema} from './product-types'
+import {adminProductSelectSchema, adminVariantSelectSchema} from './product-types'
 import {generateSKU} from '@/lib/utils'
 
 export const productsRouter = createTRPCRouter({
@@ -42,9 +42,11 @@ export const productsRouter = createTRPCRouter({
             values: true,
           },
         },
+        assets: {with: {asset: true}},
       },
     })
   }),
+
   getById: protectedProcedure.input(z.number()).query(async ({ctx, input}) => {
     const data = await ctx.db.query.products.findFirst({
       where: eq(productTable.id, input),
@@ -63,6 +65,7 @@ export const productsRouter = createTRPCRouter({
             values: true,
           },
         },
+        assets: {with: {asset: true}},
       },
     })
     return data
@@ -381,24 +384,63 @@ export const productsRouter = createTRPCRouter({
         return {success: true, productId: input.id}
       })
     }),
+
   getVariants: protectedProcedure.input(z.number()).query(async ({ctx, input}) => {
     const data = await ctx.db.query.variants.findMany({
       where: eq(variantTable.productId, input),
       with: {
         product: true,
         value: {with: {value: {with: {option: true}}}},
+        assets: {with: {asset: true}},
       },
     })
     return data
   }),
+
   getVariantById: protectedProcedure.input(z.number()).query(async ({ctx, input}) => {
     const data = await ctx.db.query.variants.findFirst({
       where: eq(variantTable.id, input),
       with: {
         value: {with: {value: {with: {option: true}}}},
+        assets: {with: {asset: true}},
       },
     })
     return data
+  }),
+
+  editVariant: protectedProcedure.input(adminVariantSelectSchema).mutation(async ({ctx, input}) => {
+    const user = ctx.session?.user
+
+    if (!user) {
+      throw new TRPCError({code: 'UNAUTHORIZED', message: 'User not found'})
+    }
+
+    if (!hasPermission(user, 'products', 'edit')) {
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'User does not have permission to edit products',
+      })
+    }
+
+    return ctx.db.transaction(async (tx) => {
+      const {id, price, stock} = input
+      console.log('editVariant input: ', input)
+
+      const updatedVariant = await tx
+        .update(variantTable)
+        .set({
+          price,
+          stock,
+        })
+        .where(eq(variantTable.id, id))
+        .returning()
+
+      if (!updatedVariant) {
+        throw new TRPCError({code: 'INTERNAL_SERVER_ERROR', message: 'Variant update failed'})
+      }
+
+      return updatedVariant
+    })
   }),
 })
 

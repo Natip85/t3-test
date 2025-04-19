@@ -1,7 +1,8 @@
 import {eq} from 'drizzle-orm'
 import {z} from 'zod'
 import {db} from '..'
-import {users} from '../schema'
+import {assets, productAsset, users, variantAsset} from '../schema'
+import {type UploadedFileData} from 'uploadthing/types'
 
 export const updateUserProfileImageProps = z.object({
   image: z.string(),
@@ -16,36 +17,75 @@ export const updateUserProfileImage = async (input: z.infer<typeof updateUserPro
     .returning({id: users.id, image: users.image})
 }
 
-// export const insertIncidentImageProps = z.object({
-//   url: z.string(),
-//   incidentId: z.number(),
-//   userId: z.string(),
-//   type: z.enum(['image', 'video']),
-//   fileInfo: z.record(z.string(), z.string()).or(z.unknown()).optional(),
-// })
+export const insertProductImageProps = z.object({
+  url: z.string(),
+  productId: z.number(),
+  userId: z.string(),
+  type: z.enum(['image', 'video']),
+  fileInfo: z.record(z.string(), z.string()).or(z.unknown()).optional(),
+})
+export const insertVariantImageProps = z.object({
+  url: z.string(),
+  variantId: z.number(),
+  userId: z.string(),
+  type: z.enum(['image', 'video']),
+  fileInfo: z.record(z.string(), z.string()).or(z.unknown()).optional(),
+})
 
-// export const insertIncidentImage = async (input: z.infer<typeof insertIncidentImageProps>) => {
-//   return db.transaction(async (tx) => {
-//     const [asset] = await tx
-//       .insert(assets)
-//       .values({
-//         url: input.url,
-//         createdByUserId: input.userId,
-//         type: input.type,
-//         fileInfo: input.fileInfo,
-//       })
-//       .returning({assetId: assets.id})
+export const insertProductImage = async (input: z.infer<typeof insertProductImageProps>) => {
+  console.log('insertProductImage>>>', input)
 
-//     if (!asset) {
-//       tx.rollback()
-//       throw new Error('Failed to insert incident images')
-//     }
+  return db.transaction(async (tx) => {
+    const [asset] = await tx
+      .insert(assets)
+      .values({
+        url: input.url,
+        createdByUserId: input.userId,
+        type: input.type,
+        fileInfo: input.fileInfo as Partial<UploadedFileData>,
+      })
+      .returning({assetId: assets.id})
 
-//     await tx.insert(incidentAsset).values({
-//       assetId: asset.assetId,
-//       incidentId: input.incidentId,
-//     })
+    if (!asset) {
+      tx.rollback()
+      throw new Error('Failed to insert product images')
+    }
+    console.log('insertProductImageAsetId>>>', asset.assetId)
 
-//     return asset
-//   })
-// }
+    await tx.insert(productAsset).values({
+      assetId: asset.assetId,
+      productId: input.productId,
+    })
+
+    return asset
+  })
+}
+
+export const insertVariantImage = async (input: z.infer<typeof insertVariantImageProps>) => {
+  console.log('insertVariantImage>>>', input)
+
+  return db.transaction(async (tx) => {
+    const [asset] = await tx
+      .insert(assets)
+      .values({
+        url: input.url,
+        createdByUserId: input.userId,
+        type: input.type,
+        fileInfo: input.fileInfo as Partial<UploadedFileData>,
+      })
+      .returning({assetId: assets.id})
+
+    if (!asset) {
+      tx.rollback()
+      throw new Error('Failed to insert variant images')
+    }
+    console.log('insertVariantImageAsetId>>>', asset.assetId)
+
+    await tx.insert(variantAsset).values({
+      assetId: asset.assetId,
+      variantId: input.variantId,
+    })
+
+    return asset
+  })
+}

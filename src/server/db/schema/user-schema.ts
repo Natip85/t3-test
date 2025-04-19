@@ -5,6 +5,7 @@ import {type AdapterAccount} from 'next-auth/adapters'
 import * as Utils from '../utils'
 import {type UserLanguage, UserLanguages, type UserRole, UserRoles} from './schema-constants'
 import {cart} from '.'
+import {assets} from './asset-schema'
 // import {assets} from './asset-schema'
 // import {incident, incidentBookmarks} from './incidents-schema'
 
@@ -38,7 +39,7 @@ export const users = Utils.createAuthTable(
 export const usersRelations = relations(users, ({many, one}) => ({
   accounts: many(accounts),
   cart: one(cart),
-  // assets: many(assets),
+  assets: many(assets),
   // bookmarks: many(productBookmark),
 }))
 
