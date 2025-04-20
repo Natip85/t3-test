@@ -8,7 +8,7 @@ type Props = {
 export const ProductImageInput = ({productId, uploadImage}: Props) => {
   return (
     <UploadDropzone
-      className='mt-0 w-full cursor-pointer rounded-md border border-dashed border-white ut-label:text-primary'
+      className='mt-0 w-full cursor-pointer rounded-md border border-dashed border-secondary ut-label:text-primary'
       endpoint='productImage'
       // @ts-expect-error I'm not sure why the types are wrong
       input={{productId}}

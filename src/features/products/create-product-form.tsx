@@ -16,6 +16,16 @@ import {useToast} from '@/hooks/use-toast'
 import VariantOptionsTable from './variants-options-table'
 import {ProductImageInput} from './product-image-input'
 import Image from 'next/image'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/ui/dialog'
 interface Props {
   product?: Product
   variants?: Variant[]
@@ -26,6 +36,7 @@ export default function CreateProductForm({product, variants}: Props) {
   const {mutateAsync: create, isPending: isLoading} = api.products.createProduct.useMutation()
   const {mutateAsync: update, isPending: isUpdateLoading} = api.products.updateProduct.useMutation()
   const {mutateAsync: deleteAsset, isPending: isDeleting} = api.assets.deleteAsset.useMutation()
+  const {mutateAsync: deleteProduct, isPending: isProductDeleting} = api.products.deleteProduct.useMutation()
 
   const form = useForm<AdminProductSelect>({
     resolver: zodResolver(adminProductSelectSchema),
@@ -78,6 +89,18 @@ export default function CreateProductForm({product, variants}: Props) {
       description: `The media was deleted successfully`,
     })
   }
+
+  const handleDeleteProduct = async (productId: number | undefined) => {
+    if (!productId) return
+    await deleteProduct(productId).catch((err) => {
+      console.error('Error deleting product', err)
+    })
+    router.push('/admin/products')
+    toast({
+      title: ' Product deleted',
+      description: `The product was deleted successfully`,
+    })
+  }
   return (
     <div className='mx-auto max-w-3xl'>
       <div className='flex items-center gap-3'>
@@ -124,7 +147,7 @@ export default function CreateProductForm({product, variants}: Props) {
           {product && (
             <>
               <h2 className='text-xl font-bold'>Media</h2>
-              <div className='grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4'>
+              <div className='grid grid-cols-2 gap-3 xl:grid-cols-3'>
                 {product?.assets.map((ass) => (
                   <div key={ass.id} className='relative aspect-square size-full'>
                     {isDeleting ? (
@@ -224,7 +247,36 @@ export default function CreateProductForm({product, variants}: Props) {
           {product && <VariantOptionsTable product={product} variants={variants} />}
 
           <div className='flex justify-end gap-3 pt-10'>
-            <Button variant={'destructive'}>Delete</Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button type='button' variant={'destructive'}>
+                  Delete
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Are you sure?</DialogTitle>
+                  <DialogDescription>
+                    This action cannot be undone. This will delete the product and all its variants.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className='gap-3'>
+                  <DialogClose asChild>
+                    <Button
+                      disabled={isProductDeleting}
+                      variant='destructive'
+                      type='button'
+                      onClick={() => handleDeleteProduct(product?.id)}
+                    >
+                      Delete
+                    </Button>
+                  </DialogClose>
+                  <DialogClose type='button' asChild>
+                    <Button type='button'>Cancel</Button>
+                  </DialogClose>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
             <Button type='submit' disabled={isLoading || isUpdateLoading || !form.formState.isDirty}>
               {isLoading ? (
                 <span className='flex items-center gap-2'>

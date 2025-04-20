@@ -67,7 +67,7 @@ export default function VariantEditForm({variant}: Props) {
             />
           )
         })}
-        <div className='grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4'>
+        <div className='grid grid-cols-2 gap-3 xl:grid-cols-3'>
           {variant?.assets.map((ass) => (
             <div key={ass.id} className='relative aspect-square size-full'>
               {isDeleting ? (

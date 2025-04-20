@@ -10,9 +10,10 @@ type Props = {
 export default async function VariantPage({params}: Props) {
   const {id, variantId} = await params
 
-  const [variant, variants] = await Promise.all([
+  const [variant, variants, product] = await Promise.all([
     api.products.getVariantById(parseInt(variantId)),
     api.products.getVariants(parseInt(id)),
+    api.products.getById(parseInt(id)),
   ])
 
   return (
@@ -25,7 +26,7 @@ export default async function VariantPage({params}: Props) {
       </div>
       <div className='mx-auto flex max-w-6xl flex-col justify-between gap-10 md:flex-row'>
         <div className='w-full md:w-1/3'>
-          <VariantMenuItems variants={variants} variantId={variantId} />
+          <VariantMenuItems variants={variants} variantId={variantId} product={product} />
         </div>
         <div className='flex-1'>
           <VariantEditForm variant={variant} />

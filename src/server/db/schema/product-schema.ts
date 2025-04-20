@@ -96,6 +96,7 @@ export const productAsset = Utils.createTable(
     assetIdIdx: index('product_asset_asset_id_idx').on(table.assetId),
   })
 )
+
 export const variantAsset = Utils.createTable(
   'variant_asset',
   {
