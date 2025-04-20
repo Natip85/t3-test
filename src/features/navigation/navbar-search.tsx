@@ -33,10 +33,10 @@ export default function NavbarSearch() {
           <span className='sr-only'>Search</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className='w-[300px] p-4'>
+      <DropdownMenuContent className='w-[300px] bg-secondary p-4'>
         <div className='relative'>
           <SearchIcon className='absolute left-2.5 top-2.5 h-4 w-4 text-gray-500 dark:text-gray-400' />
-          <Input type='search' placeholder='Search...' className='w-full pl-8' />
+          <Input type='search' placeholder='Search...' className='w-full pl-8 text-black ring-1 dark:text-white' />
         </div>
       </DropdownMenuContent>
     </DropdownMenu>

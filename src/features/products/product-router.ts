@@ -1,4 +1,6 @@
 import {TRPCError} from '@trpc/server'
+import {env} from '@/env'
+
 import {desc, eq, inArray, and} from 'drizzle-orm'
 
 import {createTRPCRouter, protectedProcedure} from '@/server/api/trpc'
@@ -10,10 +12,14 @@ import {
   products as productTable,
   variants as variantTable,
   variantOptionValues as variantOptionTable,
+  productAsset,
+  variantAsset,
+  assets,
 } from '@/server/db/schema'
 import {z} from 'zod'
 import {adminProductSelectSchema, adminVariantSelectSchema} from './product-types'
 import {generateSKU} from '@/lib/utils'
+import {utApi} from '@/server/uploadthing'
 
 export const productsRouter = createTRPCRouter({
   getAll: protectedProcedure.query(async ({ctx}) => {
@@ -438,6 +444,89 @@ export const productsRouter = createTRPCRouter({
       }
 
       return updatedVariant
+    })
+  }),
+  deleteProduct: protectedProcedure.input(z.number()).mutation(async ({ctx, input}) => {
+    const user = ctx.session?.user
+
+    if (!user) {
+      throw new TRPCError({code: 'UNAUTHORIZED', message: 'User not found'})
+    }
+
+    if (!hasPermission(user, 'products', 'delete')) {
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'User does not have permission to delete products',
+      })
+    }
+
+    return ctx.db.transaction(async (tx) => {
+      const product = await tx.query.products.findFirst({
+        where: eq(productTable.id, input),
+      })
+      if (!product) {
+        throw new TRPCError({code: 'NOT_FOUND', message: 'Product not found'})
+      }
+
+      // ✅ Get productAsset links and related assets
+      const productAssetLinks = await tx.query.productAsset.findMany({
+        where: eq(productAsset.productId, input),
+      })
+      const productAssetIds = productAssetLinks.map((link) => link.assetId)
+
+      const productAssets = await tx.query.assets.findMany({
+        where: inArray(assets.id, productAssetIds),
+      })
+      const productAssetKeys = productAssets.map((asset) => asset.url.replace(env.ASSETS_PATH_PREFIX_V0, ''))
+
+      // ✅ Get variant asset links and related assets
+      const variants = await tx.query.variants.findMany({
+        where: eq(variantTable.productId, input),
+      })
+      const variantIds = variants.map((variant) => variant.id)
+
+      let variantAssetIds: number[] = []
+      let variantAssetKeys: string[] = []
+
+      if (variantIds.length > 0) {
+        const variantAssetLinks = await tx.query.variantAsset.findMany({
+          where: inArray(variantAsset.variantId, variantIds),
+        })
+        variantAssetIds = variantAssetLinks.map((link) => link.assetId)
+
+        const variantAssets = await tx.query.assets.findMany({
+          where: inArray(assets.id, variantAssetIds),
+        })
+
+        variantAssetKeys = variantAssets.map((asset) => asset.url.replace(env.ASSETS_PATH_PREFIX_V0, ''))
+
+        await tx.delete(variantAsset).where(inArray(variantAsset.variantId, variantIds))
+      }
+
+      const allAssetKeys = [...productAssetKeys, ...variantAssetKeys]
+
+      // 🧼 Delete assets from UploadThing
+      const {success} = await utApi.deleteFiles(allAssetKeys)
+      if (!success) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to delete assets from UploadThing',
+        })
+      }
+
+      // ✅ Delete links in join tables
+      await tx.delete(productAsset).where(eq(productAsset.productId, input))
+
+      // ✅ Delete from assets table
+      const allAssetIds = [...productAssetIds, ...variantAssetIds]
+      if (allAssetIds.length > 0) {
+        await tx.delete(assets).where(inArray(assets.id, allAssetIds))
+      }
+
+      // ✅ Delete product
+      await tx.delete(productTable).where(eq(productTable.id, input))
+
+      return {success: true, message: 'Product and related assets deleted successfully'}
     })
   }),
 })

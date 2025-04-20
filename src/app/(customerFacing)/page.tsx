@@ -21,7 +21,7 @@ export default function Home() {
           And this, is chemical burn.
         </div>
         <button className='w-fit rounded-full bg-black px-4 py-2 text-white dark:bg-white dark:text-black'>
-          Debug now
+          Start shopping
         </button>
       </motion.div>
     </AuroraBg>
