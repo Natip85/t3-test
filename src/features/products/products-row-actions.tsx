@@ -23,7 +23,7 @@ export function ProductsRowActions({row}: UsersRowActionsProps) {
           <span className='sr-only'>Open menu</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align='end' className='w-[160px]'>
+      <DropdownMenuContent align='end' className='w-[160px] bg-background'>
         <DropdownMenuItem
           className='font-button text-xl'
           onClick={() => router.push(`/admin/products/${row.original.id}`)}

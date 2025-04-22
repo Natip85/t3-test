@@ -1,7 +1,7 @@
 import {TRPCError} from '@trpc/server'
 import {env} from '@/env'
 
-import {desc, eq, inArray, and} from 'drizzle-orm'
+import {desc, eq, inArray, and, ilike, or, not} from 'drizzle-orm'
 
 import {createTRPCRouter, protectedProcedure} from '@/server/api/trpc'
 
@@ -77,6 +77,146 @@ export const productsRouter = createTRPCRouter({
     return data
   }),
 
+  getSearchInputTermProducts: protectedProcedure
+    .input(
+      z.object({
+        searchTerm: z.string(),
+      })
+    )
+    .query(async ({ctx, input}) => {
+      const userId = ctx.session?.user.id
+      if (!userId) {
+        throw new TRPCError({code: 'UNAUTHORIZED'})
+      }
+
+      const term = `%${input.searchTerm}%`
+
+      // Step 1: Strong matches by name or description
+      const matchedResults = await ctx.db.query.products.findMany({
+        where: or(ilike(productTable.name, term), ilike(productTable.description, term)),
+        with: {
+          variants: {
+            with: {
+              value: {
+                with: {
+                  value: {with: {option: true}},
+                },
+              },
+              assets: {
+                with: {
+                  variantAsset: true,
+                },
+              },
+            },
+          },
+          options: {
+            with: {
+              values: true,
+            },
+          },
+          assets: {
+            with: {
+              asset: true,
+            },
+          },
+        },
+        limit: 10, // get more than 5 just in case
+      })
+
+      // If we have enough results, return the top 5
+      if (matchedResults.length >= 5) {
+        return matchedResults.slice(0, 5)
+      }
+
+      // Step 2: If not enough, get some fallback products (e.g. latest, popular, etc.)
+      const searchFilter = or(ilike(productTable.name, term), ilike(productTable.description, term))
+
+      // fallback: get unrelated products
+      const fallbackResults = await ctx.db.query.products.findMany({
+        where: searchFilter ? not(searchFilter) : undefined,
+        orderBy: desc(productTable.createdAt),
+        limit: 10, // get more than needed
+        with: {
+          variants: {
+            with: {
+              value: {
+                with: {
+                  value: {with: {option: true}},
+                },
+              },
+              assets: {
+                with: {
+                  variantAsset: true,
+                },
+              },
+            },
+          },
+          options: {
+            with: {
+              values: true,
+            },
+          },
+          assets: {
+            with: {
+              asset: true,
+            },
+          },
+        },
+      })
+
+      // Combine and return at least 5
+      const finalResults = [...matchedResults, ...fallbackResults].slice(0, 5)
+      return finalResults
+    }),
+  getSearchTermProducts: protectedProcedure
+    .input(
+      z.object({
+        searchTerm: z.string(),
+      })
+    )
+    .query(async ({ctx, input}) => {
+      const userId = ctx.session?.user.id
+      if (!userId) {
+        throw new TRPCError({code: 'UNAUTHORIZED'})
+      }
+
+      const term = `%${input.searchTerm}%`
+
+      // Step 1: Strong matches by name or description
+      const matchedResults = await ctx.db.query.products.findMany({
+        where: or(ilike(productTable.name, term), ilike(productTable.description, term)),
+        with: {
+          variants: {
+            with: {
+              value: {
+                with: {
+                  value: {with: {option: true}},
+                },
+              },
+              assets: {
+                with: {
+                  variantAsset: true,
+                },
+              },
+            },
+          },
+          options: {
+            with: {
+              values: true,
+            },
+          },
+          assets: {
+            with: {
+              asset: true,
+            },
+          },
+        },
+        limit: 5,
+      })
+
+      return matchedResults // Will return [] if nothing matched
+    }),
+
   createProduct: protectedProcedure.input(adminProductSelectSchema).mutation(async ({ctx, input}) => {
     if (!ctx.session?.user) {
       throw new TRPCError({code: 'UNAUTHORIZED'})
@@ -87,9 +227,12 @@ export const productsRouter = createTRPCRouter({
     }
 
     return ctx.db.transaction(async (tx) => {
-      const {name, price, description, stockQuantity, options} = input
+      const {name, price, description, stockQuantity, active, options} = input
 
-      const [newProduct] = await tx.insert(productTable).values({name, description, price, stockQuantity}).returning()
+      const [newProduct] = await tx
+        .insert(productTable)
+        .values({name, description, price, stockQuantity, active})
+        .returning()
       if (!newProduct) {
         throw new TRPCError({code: 'INTERNAL_SERVER_ERROR', message: 'Product creation failed'})
       }
@@ -191,6 +334,7 @@ export const productsRouter = createTRPCRouter({
             name: input.name,
             description: input.description,
             price: input.price,
+            active: input.active,
           })
           .where(eq(productTable.id, input.id))
           .returning()
@@ -395,7 +539,7 @@ export const productsRouter = createTRPCRouter({
       with: {
         product: true,
         value: {with: {value: {with: {option: true}}}},
-        assets: {with: {asset: true}},
+        assets: {with: {variantAsset: true}},
       },
     })
     return data
@@ -406,7 +550,7 @@ export const productsRouter = createTRPCRouter({
       where: eq(variantTable.id, input),
       with: {
         value: {with: {value: {with: {option: true}}}},
-        assets: {with: {asset: true}},
+        assets: {with: {variantAsset: true}},
       },
     })
     return data

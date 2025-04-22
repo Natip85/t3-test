@@ -40,10 +40,10 @@ export default function VariantMenuItems({variants, variantId, product}: Props) 
             })}
           >
             <div>
-              {item.assets[0]?.asset.fileInfo?.url ? (
+              {item.assets[0]?.variantAsset.fileInfo?.url ? (
                 <div className='relative aspect-square size-8'>
                   <Image
-                    src={item.assets[0]?.asset.fileInfo?.url}
+                    src={item.assets[0]?.variantAsset.fileInfo?.url}
                     fill
                     alt='variant img'
                     className='h-10 w-10 rounded-md object-cover'

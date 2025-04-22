@@ -4,7 +4,7 @@ import {USER_NAV_ITEMS} from './constants'
 
 export default function NavbarLinks() {
   return (
-    <nav className='hidden items-center gap-6 text-sm font-medium md:flex'>
+    <nav className='hidden items-center gap-5 text-sm font-medium md:flex'>
       {USER_NAV_ITEMS.map((item) => (
         <Link
           key={item.title}

@@ -13,6 +13,7 @@ export const products = Utils.createTable(
     description: text('description'),
     price: numeric('price', {precision: 10, scale: 2}).default('0').notNull(),
     stockQuantity: integer('stock_quantity').default(0).notNull(),
+    active: text('active').notNull(),
     createdAt: timestamp('created_at').defaultNow(),
   },
   (table) => ({
@@ -152,5 +153,5 @@ export const productAssetRelations = relations(productAsset, ({one}) => ({
 }))
 export const variantAssetRelations = relations(variantAsset, ({one}) => ({
   variant: one(variants, {fields: [variantAsset.variantId], references: [variants.id]}),
-  asset: one(assets, {fields: [variantAsset.assetId], references: [assets.id]}),
+  variantAsset: one(assets, {fields: [variantAsset.assetId], references: [assets.id]}),
 }))

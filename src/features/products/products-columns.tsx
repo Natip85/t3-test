@@ -4,19 +4,41 @@ import {type ColumnDef} from '@tanstack/react-table'
 import {DataTableColumnHeader} from '@/components/table/data-table-column-header'
 import {ProductsRowActions} from './products-row-actions'
 import {Button} from '@/ui/button'
-import {type ProductSelect} from './product-types'
+import {type Product} from './product-types'
 import {formatCurrency} from '@/lib/formatters'
+import Image from 'next/image'
+import {ImageIcon} from 'lucide-react'
 
-export const columns: ColumnDef<ProductSelect>[] = [
+export const columns: ColumnDef<Product>[] = [
   {
     accessorKey: 'id',
     header: ({column}) => <DataTableColumnHeader column={column} title='ID' />,
     cell: ({row}) => <div>{row.original.id}</div>,
   },
   {
+    accessorKey: 'image',
+    header: ({}) => <Button variant={'ghost'}>Image</Button>,
+    cell: ({row}) => {
+      return (
+        <div className='relative aspect-square h-10 w-10'>
+          {row.original.assets[0]?.asset.fileInfo?.url ? (
+            <Image
+              src={row.original.assets[0]?.asset.fileInfo?.url ?? ''}
+              alt='product img'
+              fill
+              className='rounded-md object-cover'
+            />
+          ) : (
+            <ImageIcon className='size-full' />
+          )}
+        </div>
+      )
+    },
+  },
+  {
     accessorKey: 'name',
     header: ({column}) => <DataTableColumnHeader column={column} title='Name' />,
-    cell: ({row}) => <div>{row.original.name ?? ''}</div>,
+    cell: ({row}) => <div className='flex items-center gap-2'>{row.original.name ?? ''}</div>,
   },
   {
     accessorKey: 'price',
@@ -27,6 +49,11 @@ export const columns: ColumnDef<ProductSelect>[] = [
     accessorKey: 'stockQuantity',
     header: ({column}) => <DataTableColumnHeader column={column} title='Stock quantity' />,
     cell: ({row}) => <div>{row.original.stockQuantity || 0}</div>,
+  },
+  {
+    accessorKey: 'active',
+    header: ({column}) => <DataTableColumnHeader column={column} title='Status' />,
+    cell: ({row}) => <div className='flex items-center gap-2'>{row.original.active ?? ''}</div>,
   },
   {
     accessorKey: 'actions',
