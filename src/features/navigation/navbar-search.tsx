@@ -14,7 +14,7 @@ export default function NavbarSearch() {
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const [{searchTerm}, setSearchParams] = useQueryStates(pageSearchParams, {shallow: false})
-  const {data, isPending} = api.products.getSearchInputTermProducts.useQuery({
+  const {data, isPending} = api.products.getSearchTermProducts.useQuery({
     searchTerm: searchTerm,
   })
 
