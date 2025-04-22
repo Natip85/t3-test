@@ -74,12 +74,12 @@ export default function VariantEditForm({variant}: Props) {
                 <Loader2 className='absolute right-2 top-2 z-50 animate-spin text-destructive' />
               ) : (
                 <X
-                  onClick={() => void doDeleteAsset(ass.asset.id)}
+                  onClick={() => void doDeleteAsset(ass.variantAsset.id)}
                   className='absolute right-2 top-2 z-50 border bg-destructive/20 text-destructive shadow-md transition-colors hover:cursor-pointer hover:bg-destructive/40'
                 />
               )}
 
-              <Image src={ass.asset.fileInfo?.url ?? ''} fill alt='prod img' className='rounded-md' />
+              <Image src={ass.variantAsset.fileInfo?.url ?? ''} fill alt='prod img' className='rounded-md' />
             </div>
           ))}
           <VariantImageInput variantId={variant?.id ?? 0} uploadImage={() => router.refresh()} />

@@ -1,5 +1,5 @@
 'use client'
-import {Package, Users2} from 'lucide-react'
+import {FrameIcon, LayoutDashboard, Package, Users2} from 'lucide-react'
 
 import {
   Sidebar,
@@ -19,14 +19,24 @@ import {MountainIcon} from './navbar'
 
 const items = [
   {
-    title: 'users',
+    title: 'Dashboard',
+    url: '/admin/dashboard',
+    icon: LayoutDashboard,
+  },
+  {
+    title: 'Customers',
     url: '/admin/users',
     icon: Users2,
   },
   {
-    title: 'products',
+    title: 'Products',
     url: '/admin/products',
     icon: Package,
+  },
+  {
+    title: 'Orders',
+    url: '/admin/orders',
+    icon: FrameIcon,
   },
 ]
 

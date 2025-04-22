@@ -1,15 +1,17 @@
 'use client'
 import type React from 'react'
 import Link from 'next/link'
-import {Button} from '@/components/ui/button'
-import {Sheet, SheetTrigger, SheetContent} from '@/components/ui/sheet'
 import NavbarLinks from './navbar-links'
-import MobileNavbarLinks from './mobile-navbar-links'
 import NavbarSearch from './navbar-search'
 import {ThemeToggle} from './theme-toggle'
 import {hasRole} from '@/lib/permissions'
-import {useUser} from '@/hooks/use-user'
 import UserAccountNav from './user-account-nav'
+import CartIcon from '../cart/cart-icon'
+import {Button} from '@/ui/button'
+import {Sheet, SheetContent, SheetTrigger} from '@/ui/sheet'
+import MobileNavbarLinks from './mobile-navbar-links'
+import {useUser} from '@/hooks/use-user'
+import {Suspense} from 'react'
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
   className?: string
@@ -54,19 +56,24 @@ export const MountainIcon: React.FC<IconProps> = (props) => {
     </svg>
   )
 }
-
 export default function Navbar() {
   const {user, isAuthenticated} = useUser()
   return (
     <header className='sticky top-0 z-50 w-full border-b bg-white dark:border-gray-800 dark:bg-gray-950'>
-      <div className='container mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:px-6'>
-        <Link href='/' className='flex items-center gap-2' prefetch={false}>
-          <MountainIcon className='h-6 w-6' />
-          <span className='sr-only'>Acme Inc</span>
-        </Link>
-        <NavbarLinks />
-        <div className='flex items-center gap-4'>
-          <NavbarSearch />
+      <div className='mx-auto flex h-16 items-center justify-between gap-6 px-6 md:px-12'>
+        <div className='flex items-center gap-10'>
+          <Link href='/' className='flex items-center gap-2' prefetch={false}>
+            <MountainIcon className='h-6 w-6' />
+            <span className='sr-only'>Acme Inc</span>
+          </Link>
+          <NavbarLinks />
+        </div>
+        <div className='max-w-2xl flex-1'>
+          <Suspense fallback={<div>Loading search...</div>}>
+            <NavbarSearch />
+          </Suspense>
+        </div>
+        <div className='flex items-center gap-2 md:gap-5'>
           <ThemeToggle />
           {hasRole(user, ['admin', 'investigator', 'owner', 'staff']) && (
             <Button asChild size='sm' className='hidden md:flex'>
@@ -79,6 +86,9 @@ export default function Navbar() {
               <Link href='/auth/login'>LOG IN</Link>
             </Button>
           )}
+          <div>
+            <CartIcon />
+          </div>
           <Sheet>
             <SheetTrigger asChild className='md:hidden'>
               <Button variant='ghost' size='icon' className='rounded-full'>

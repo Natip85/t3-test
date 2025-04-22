@@ -4,13 +4,7 @@ import {type Row} from '@tanstack/react-table'
 import {MoreHorizontal} from 'lucide-react'
 
 import {Button} from '@/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/ui/dropdown-menu'
+import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from '@/ui/dropdown-menu'
 import {useState} from 'react'
 import {ResponsiveDialog} from '@/components/responsive-dialog'
 import {type UserSelect} from '@/features/auth/user-types'
@@ -20,7 +14,6 @@ interface UsersRowActionsProps {
   row: Row<UserSelect>
 }
 
-// TODO make this a single component and pass in the user
 export function UsersRowActions({row}: UsersRowActionsProps) {
   const [isEditOpen, setIsEditOpen] = useState(false)
 
@@ -41,7 +34,7 @@ export function UsersRowActions({row}: UsersRowActionsProps) {
             <span className='sr-only'>Open menu</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align='end' className='w-[160px]'>
+        <DropdownMenuContent align='end' className='w-[160px] bg-background'>
           <DropdownMenuItem
             className='font-button text-xl'
             onClick={() => {
@@ -50,8 +43,6 @@ export function UsersRowActions({row}: UsersRowActionsProps) {
           >
             Edit
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant='destructive'>Delete</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </>

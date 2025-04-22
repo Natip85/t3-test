@@ -89,6 +89,7 @@ CREATE TABLE "products" (
 	"description" text,
 	"price" numeric(10, 2) DEFAULT '0' NOT NULL,
 	"stock_quantity" integer DEFAULT 0 NOT NULL,
+	"active" text NOT NULL,
 	"created_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint

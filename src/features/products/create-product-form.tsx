@@ -26,6 +26,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/ui/dialog'
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/ui/select'
 interface Props {
   product?: Product
   variants?: Variant[]
@@ -40,7 +41,7 @@ export default function CreateProductForm({product, variants}: Props) {
 
   const form = useForm<AdminProductSelect>({
     resolver: zodResolver(adminProductSelectSchema),
-    defaultValues: product,
+    defaultValues: product || {active: 'draft'},
   })
 
   async function onSubmit(values: AdminProductSelect) {
@@ -101,200 +102,237 @@ export default function CreateProductForm({product, variants}: Props) {
       description: `The product was deleted successfully`,
     })
   }
+  console.log('watch', form.watch())
+  console.log('errors', form.formState.errors)
+
   return (
-    <div className='mx-auto max-w-3xl'>
-      <div className='flex items-center gap-3'>
+    <div>
+      <div className='mx-auto mb-10 flex max-w-5xl items-center gap-3'>
         <Button type='button' size={'sm'} variant={'ghost'} onClick={() => router.push('/admin/products')}>
           <ArrowLeft />
         </Button>
         <h2 className='text-2xl md:text-4xl'> {product ? product.name : 'Add product'}</h2>
       </div>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8 py-10'>
-          <FormField
-            control={form.control}
-            name='name'
-            render={({field}) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input placeholder='Name...' type='text' {...field} />
-                </FormControl>
-                <FormDescription>This is the public product name.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name='description'
-            render={({field}) => (
-              <FormItem>
-                <FormLabel htmlFor='description'>Description</FormLabel>
-                <FormControl>
-                  <Textarea
-                    id='description'
-                    {...field}
-                    value={field.value ?? ''}
-                    placeholder='Description'
-                    className='resize-none'
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {product && (
-            <>
-              <h2 className='text-xl font-bold'>Media</h2>
-              <div className='grid grid-cols-2 gap-3 xl:grid-cols-3'>
-                {product?.assets.map((ass) => (
-                  <div key={ass.id} className='relative aspect-square size-full'>
-                    {isDeleting ? (
-                      <Loader2 className='absolute right-2 top-2 z-50 animate-spin text-destructive' />
-                    ) : (
-                      <X
-                        onClick={() => void doDeleteAsset(ass.asset.id)}
-                        className='absolute right-2 top-2 z-50 border bg-destructive/20 text-destructive shadow-md transition-colors hover:cursor-pointer hover:bg-destructive/40'
-                      />
-                    )}
 
-                    <Image src={ass.asset.fileInfo?.url ?? ''} fill alt='prod img' className='rounded-md' />
-                  </div>
-                ))}
-
-                <ProductImageInput productId={product?.id ?? 0} uploadImage={() => router.refresh()} />
-              </div>
-            </>
-          )}
-
-          <FormField
-            control={form.control}
-            name='price'
-            render={({field}) => (
-              <FormItem>
-                <FormLabel>Price</FormLabel>
-                <FormControl>
-                  <Input placeholder='$0.00' {...field} onChange={(e) => field.onChange(e.target.value)} />
-                </FormControl>
-                <FormDescription>
-                  The price in cents (e.g., $10.00 = 1000).
-                  <br />
-                  <span className='text-base'>{formatCurrency(form.getValues('price') || 0)}</span>
-                  <br />
-                  <span>Any changes made here will reflect on all variants</span>
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name='stockQuantity'
-            render={({field}) => (
-              <FormItem>
-                <FormLabel>Stock quantity</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder='Quantity...'
-                    type='number'
-                    {...field}
-                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : '')}
-                  />
-                </FormControl>
-                <FormDescription>Any changes made here will reflect on all variants</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {optionFields.length > 0 && <h2 className='text-xl font-bold'>Variants</h2>}
-          {optionFields.map((optionField, optionIndex) => (
-            <div key={optionField.id} className='relative space-y-4 rounded-md border p-4 pt-10'>
+      <div>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className='mx-auto flex max-w-5xl flex-col-reverse gap-8 lg:flex-row'
+          >
+            <div className='flex-1 space-y-4'>
               <FormField
                 control={form.control}
-                name={`options.${optionIndex}.name`}
+                name='name'
                 render={({field}) => (
                   <FormItem>
-                    <FormLabel>Variant Name</FormLabel>
+                    <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input placeholder='e.g., Color, Size' {...field} />
+                      <Input placeholder='Name...' type='text' {...field} />
+                    </FormControl>
+                    <FormDescription>This is the public product name.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='description'
+                render={({field}) => (
+                  <FormItem>
+                    <FormLabel htmlFor='description'>Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        id='description'
+                        {...field}
+                        value={field.value ?? ''}
+                        placeholder='Description'
+                        className='resize-none'
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              {product && (
+                <>
+                  <h2 className='text-xl font-bold'>Media</h2>
+                  <div className='grid grid-cols-2 gap-3 xl:grid-cols-3'>
+                    {product?.assets.map((ass) => (
+                      <div key={ass.id} className='relative aspect-square size-full'>
+                        {isDeleting ? (
+                          <Loader2 className='absolute right-2 top-2 z-50 animate-spin text-destructive' />
+                        ) : (
+                          <X
+                            onClick={() => void doDeleteAsset(ass.asset.id)}
+                            className='absolute right-2 top-2 z-50 border bg-destructive/20 text-destructive shadow-md transition-colors hover:cursor-pointer hover:bg-destructive/40'
+                          />
+                        )}
 
-              <div className='space-y-2'>
-                <FormLabel className='font-medium'>Variant Options</FormLabel>
-                <OptionFields nestIndex={optionIndex} form={form} product={product} />
-              </div>
+                        <Image src={ass.asset.fileInfo?.url ?? ''} fill alt='prod img' className='rounded-md' />
+                      </div>
+                    ))}
 
-              <Button
-                type='button'
-                variant='outline'
-                size='sm'
-                onClick={() => removeOption(optionIndex)}
-                className='absolute right-4 top-0'
-              >
-                <Trash2 />
-              </Button>
-            </div>
-          ))}
-          <Button type='button' onClick={addVariant}>
-            <Plus /> variant
-          </Button>
-
-          {product && <VariantOptionsTable product={product} variants={variants} />}
-
-          <div className='flex justify-end gap-3 pt-10'>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button type='button' variant={'destructive'}>
-                  Delete
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Are you sure?</DialogTitle>
-                  <DialogDescription>
-                    This action cannot be undone. This will delete the product and all its variants.
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogFooter className='gap-3'>
-                  <DialogClose asChild>
-                    <Button
-                      disabled={isProductDeleting}
-                      variant='destructive'
-                      type='button'
-                      onClick={() => handleDeleteProduct(product?.id)}
-                    >
-                      Delete
-                    </Button>
-                  </DialogClose>
-                  <DialogClose type='button' asChild>
-                    <Button type='button'>Cancel</Button>
-                  </DialogClose>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-            <Button type='submit' disabled={isLoading || isUpdateLoading || !form.formState.isDirty}>
-              {isLoading ? (
-                <span className='flex items-center gap-2'>
-                  <Loader2 className='animate-spin' /> Creating...
-                </span>
-              ) : isUpdateLoading ? (
-                <span className='flex items-center gap-2'>
-                  <Loader2 className='animate-spin' /> Updating...
-                </span>
-              ) : product ? (
-                'Update'
-              ) : (
-                'Create'
+                    <ProductImageInput productId={product?.id ?? 0} uploadImage={() => router.refresh()} />
+                  </div>
+                </>
               )}
-            </Button>
-          </div>
-        </form>
-      </Form>
+
+              <FormField
+                control={form.control}
+                name='price'
+                render={({field}) => (
+                  <FormItem>
+                    <FormLabel>Price</FormLabel>
+                    <FormControl>
+                      <Input placeholder='$0.00' {...field} onChange={(e) => field.onChange(e.target.value)} />
+                    </FormControl>
+                    <FormDescription>
+                      The price in cents (e.g., $10.00 = 1000).
+                      <br />
+                      <span className='text-base'>{formatCurrency(form.getValues('price') || 0)}</span>
+                      <br />
+                      <span>Any changes made here will reflect on all variants</span>
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='stockQuantity'
+                render={({field}) => (
+                  <FormItem>
+                    <FormLabel>Stock quantity</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder='Quantity...'
+                        type='number'
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : '')}
+                      />
+                    </FormControl>
+                    <FormDescription>Any changes made here will reflect on all variants</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {optionFields.length > 0 && <h2 className='text-xl font-bold'>Variants</h2>}
+              {optionFields.map((optionField, optionIndex) => (
+                <div key={optionField.id} className='relative space-y-4 rounded-md border p-4 pt-10'>
+                  <FormField
+                    control={form.control}
+                    name={`options.${optionIndex}.name`}
+                    render={({field}) => (
+                      <FormItem>
+                        <FormLabel>Variant Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder='e.g., Color, Size' {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className='space-y-2'>
+                    <FormLabel className='font-medium'>Variant Options</FormLabel>
+                    <OptionFields nestIndex={optionIndex} form={form} product={product} />
+                  </div>
+
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    onClick={() => removeOption(optionIndex)}
+                    className='absolute right-4 top-0'
+                  >
+                    <Trash2 />
+                  </Button>
+                </div>
+              ))}
+              <Button type='button' onClick={addVariant}>
+                <Plus /> variant
+              </Button>
+
+              {product && <VariantOptionsTable product={product} variants={variants} />}
+
+              <div className='flex justify-end gap-3 pt-10'>
+                {product && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button type='button' variant={'destructive'}>
+                        Delete
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Are you sure?</DialogTitle>
+                        <DialogDescription>
+                          This action cannot be undone. This will delete the product and all its variants.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <DialogFooter className='gap-3'>
+                        <DialogClose asChild>
+                          <Button
+                            disabled={isProductDeleting}
+                            variant='destructive'
+                            type='button'
+                            onClick={() => handleDeleteProduct(product?.id)}
+                          >
+                            Delete
+                          </Button>
+                        </DialogClose>
+                        <DialogClose type='button' asChild>
+                          <Button type='button'>Cancel</Button>
+                        </DialogClose>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )}
+
+                <Button type='submit' disabled={isLoading || isUpdateLoading || !form.formState.isDirty}>
+                  {isLoading ? (
+                    <span className='flex items-center gap-2'>
+                      <Loader2 className='animate-spin' /> Creating...
+                    </span>
+                  ) : isUpdateLoading ? (
+                    <span className='flex items-center gap-2'>
+                      <Loader2 className='animate-spin' /> Updating...
+                    </span>
+                  ) : product ? (
+                    'Update'
+                  ) : (
+                    'Create'
+                  )}
+                </Button>
+              </div>
+            </div>
+            <div className='w-full lg:w-1/4'>
+              <FormField
+                control={form.control}
+                name='active'
+                render={({field}) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select a verified email to display' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value={'active'}>Active</SelectItem>
+                        <SelectItem value={'draft'}>Draft</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </form>
+        </Form>
+      </div>
     </div>
   )
 }

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   icons: [{rel: 'icon', url: '/favicon.ico'}],
 }
 
-export default function CustomerLayout({
+export default async function CustomerLayout({
   children,
 }: Readonly<{
   children: React.ReactNode

@@ -18,6 +18,10 @@ export const USER_NAV_ITEMS: NavItem[] = [
     title: 'T3 tetsing 2',
     path: '/t3-testing2',
   },
+  {
+    title: 'T3 tetsing 3',
+    path: '/t3-testing3',
+  },
   // {
   //   title: 'MORE',
   //   path: '/more',

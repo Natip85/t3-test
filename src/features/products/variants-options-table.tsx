@@ -31,10 +31,10 @@ export default function VariantOptionsTable({product, variants}: Props) {
               <TableCell>
                 <a href={`/admin/products/${product?.id}/variant/${variant.id}`}>
                   <div>
-                    {variant.assets[0]?.asset.fileInfo?.url ? (
+                    {variant.assets[0]?.variantAsset.fileInfo?.url ? (
                       <div className='relative aspect-square size-8'>
                         <Image
-                          src={variant.assets[0]?.asset.fileInfo?.url}
+                          src={variant.assets[0]?.variantAsset.fileInfo?.url}
                           fill
                           alt='variant img'
                           className='h-10 w-10 rounded-md object-cover'

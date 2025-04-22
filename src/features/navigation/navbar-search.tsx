@@ -1,44 +1,94 @@
+'use client'
+import {useRef, useState, useEffect, type KeyboardEvent, type ChangeEvent} from 'react'
+import {Search} from 'lucide-react'
+import {Input} from '@/components/ui/input'
+import {useRouter} from 'next/navigation'
 import {Button} from '@/ui/button'
-import {DropdownMenu, DropdownMenuContent, DropdownMenuTrigger} from '@/ui/dropdown-menu'
-import {Input} from '@/ui/input'
-interface IconProps extends React.SVGProps<SVGSVGElement> {
-  className?: string
-}
-const SearchIcon: React.FC<IconProps> = (props) => {
-  return (
-    <svg
-      {...props}
-      xmlns='http://www.w3.org/2000/svg'
-      width='24'
-      height='24'
-      viewBox='0 0 24 24'
-      fill='none'
-      stroke='currentColor'
-      strokeWidth='2'
-      strokeLinecap='round'
-      strokeLinejoin='round'
-    >
-      <circle cx='11' cy='11' r='8' />
-      <path d='m21 21-4.3-4.3' />
-    </svg>
-  )
-}
+import {useQueryStates} from 'nuqs'
+import {pageSearchParams} from '@/hooks/use-search-params'
+import {api} from '@/trpc/react'
 
 export default function NavbarSearch() {
+  const router = useRouter()
+  const [isFocused, setIsFocused] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [{searchTerm}, setSearchParams] = useQueryStates(pageSearchParams, {shallow: false})
+  const {data, isPending} = api.products.getSearchTermProducts.useQuery({
+    searchTerm: searchTerm,
+  })
+
+  const handleSearch = (term: string) => {
+    if (term.trim()) {
+      router.push(`/search?searchTerm=${encodeURIComponent(term)}`)
+    }
+    inputRef.current?.blur()
+    setIsFocused(false)
+  }
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch(searchTerm)
+    }
+  }
+
+  const handleChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value
+    await setSearchParams({searchTerm: newValue})
+
+    if (newValue === '') {
+      handleSearch('')
+    }
+  }
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsFocused(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant='ghost' size='icon' className='rounded-full'>
-          <SearchIcon className='h-5 w-5 text-gray-500 dark:text-gray-400' />
-          <span className='sr-only'>Search</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className='w-[300px] bg-secondary p-4'>
-        <div className='relative'>
-          <SearchIcon className='absolute left-2.5 top-2.5 h-4 w-4 text-gray-500 dark:text-gray-400' />
-          <Input type='search' placeholder='Search...' className='w-full pl-8 text-black ring-1 dark:text-white' />
+    <div className='relative w-full' ref={containerRef}>
+      <Button
+        size={'icon'}
+        className='absolute right-2 top-[0.4rem] z-10 size-7 rounded-lg'
+        onClick={() => handleSearch(searchTerm)}
+      >
+        <Search />
+      </Button>
+      <Input
+        ref={inputRef}
+        type='search'
+        placeholder='Search...'
+        value={searchTerm}
+        onChange={handleChange}
+        onFocus={() => setIsFocused(true)}
+        onKeyDown={handleKeyDown}
+        className='w-full p-5 pr-11 text-black ring-1 dark:text-white'
+      />
+
+      {isFocused && (
+        <div className='absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-md border bg-white p-2 shadow-lg dark:bg-zinc-900'>
+          {isPending && <div className='text-center'>Loading...</div>}
+          {data?.map((product) => (
+            <Button
+              key={product.id}
+              onClick={() => {
+                router.push(`/search?searchTerm=${product.name}`)
+              }}
+            >
+              {product.name}
+            </Button>
+          ))}
         </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      )}
+    </div>
   )
 }
