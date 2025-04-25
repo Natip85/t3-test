@@ -5,7 +5,7 @@ import {formatCurrency} from '@/lib/formatters'
 import {Button} from '@/ui/button'
 import React from 'react'
 import {type Product} from './product-types'
-import {CheckCircle, MinusIcon, PlusIcon} from 'lucide-react'
+import {MinusIcon, PlusIcon} from 'lucide-react'
 
 type Props = {
   product?: Product
