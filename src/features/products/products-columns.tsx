@@ -4,12 +4,12 @@ import {type ColumnDef} from '@tanstack/react-table'
 import {DataTableColumnHeader} from '@/components/table/data-table-column-header'
 import {ProductsRowActions} from './products-row-actions'
 import {Button} from '@/ui/button'
-import {type Product} from './product-types'
+import {type ProductSelect, type Product} from './product-types'
 import {formatCurrency} from '@/lib/formatters'
 import Image from 'next/image'
 import {ImageIcon} from 'lucide-react'
 
-export const columns: ColumnDef<Product>[] = [
+export const columns: ColumnDef<ProductSelect>[] = [
   {
     accessorKey: 'id',
     header: ({column}) => <DataTableColumnHeader column={column} title='ID' />,
@@ -17,9 +17,9 @@ export const columns: ColumnDef<Product>[] = [
   },
   {
     accessorKey: 'name',
-    header: ({column}) => <DataTableColumnHeader column={column} title='Product' />,
+    header: ({column}) => <DataTableColumnHeader column={column} title='Name' />,
     cell: ({row}) => {
-      const imageUrl = row.original.assets[0]?.asset.fileInfo?.url ?? ''
+      const imageUrl = (row.original as Product).assets[0]?.asset.fileInfo?.url ?? ''
       return (
         <div className='flex items-center gap-3'>
           <div className='relative aspect-square h-10 w-10'>

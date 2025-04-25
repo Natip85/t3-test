@@ -5,7 +5,7 @@ import {formatCurrency} from '@/lib/formatters'
 import {Button} from '@/ui/button'
 import React from 'react'
 import {type Product} from './product-types'
-import {CheckCircle} from 'lucide-react'
+import {CheckCircle, MinusIcon, PlusIcon} from 'lucide-react'
 
 type Props = {
   product?: Product
@@ -33,11 +33,15 @@ export default function AddProductToCartSection({product}: Props) {
               quantity: 1,
             })
           }
-          disabled={isInCart}
         >
           {isInCart ? (
-            <div className='flex items-center gap-3'>
-              <CheckCircle className='text-green-400' /> <span>Added to Cart</span>
+            <div className='flex items-center justify-between gap-3'>
+              <Button className='rounded-full text-white'>
+                <MinusIcon />
+              </Button>
+              <Button>
+                <PlusIcon />
+              </Button>
             </div>
           ) : (
             <span>Add to Cart</span>

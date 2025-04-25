@@ -11,11 +11,9 @@ export default function CartIcon() {
       <SheetTrigger asChild className='flex items-center justify-center hover:cursor-pointer'>
         <Toggle asChild className='size-5 rounded-full md:size-9'>
           <div className='relative'>
-            {totalQuantity > 0 && (
-              <div className='absolute right-0 top-0 flex size-4 items-center justify-center rounded-full bg-primary font-semibold text-white'>
-                {totalQuantity}
-              </div>
-            )}
+            <div className='absolute right-0 top-0 flex size-4 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white'>
+              {totalQuantity}
+            </div>
 
             <ShoppingCartIcon />
           </div>
