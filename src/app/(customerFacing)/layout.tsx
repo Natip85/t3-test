@@ -1,5 +1,6 @@
 import Footer from '@/features/navigation/footer'
 import Navbar from '@/features/navigation/navbar'
+import CartProvider from '@/lib/cart-provider'
 import {HydrateClient} from '@/trpc/server'
 import {type Metadata} from 'next'
 
@@ -18,7 +19,9 @@ export default async function CustomerLayout({
     <HydrateClient>
       <div className='relative flex min-h-screen flex-col'>
         <Navbar />
-        <main className='flex flex-1'>{children}</main>
+        <main className='flex flex-1'>
+          <CartProvider>{children}</CartProvider>
+        </main>
         <Footer />
       </div>
     </HydrateClient>

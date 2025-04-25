@@ -12,7 +12,6 @@ type PageProps = {
 
 export default async function SearchPage({searchParams}: PageProps) {
   const {searchTerm} = await loadPageSearchParams(searchParams)
-
   const results = await api.products.getSearchTermProducts({searchTerm})
 
   return (
