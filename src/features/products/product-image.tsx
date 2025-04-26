@@ -15,7 +15,7 @@ const ProductImage = ({product}: ProductImageProps) => {
   return (
     <div className='flex max-w-full flex-1 flex-col gap-2 sm:flex-row'>
       {/* Thumbnail section */}
-      <div className='mx-auto mt-2 flex h-[100px] flex-row gap-2 overflow-x-auto sm:mt-0 sm:h-[500px] sm:w-[120px] sm:min-w-[100px] sm:flex-col sm:overflow-visible'>
+      <div className='mx-auto mt-2 flex h-[100px] flex-row gap-2 overflow-auto sm:mt-0 sm:h-[500px] sm:w-[120px] sm:min-w-[100px] sm:flex-col'>
         {product?.variants.map((variant) =>
           variant.assets.map((asset) => {
             const thumbUrl = asset.variantAsset.fileInfo?.url ?? ''

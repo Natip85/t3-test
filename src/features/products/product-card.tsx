@@ -3,22 +3,26 @@
 import {Card, CardContent} from '@/ui/card'
 import {type Product} from './product-types'
 import {Button} from '@/ui/button'
-import {HeartIcon, PlusIcon} from 'lucide-react'
+import {CheckCircle2, HeartIcon, PlusIcon} from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import {useState} from 'react'
 import {Rating} from '@/ui/rating'
+import {useCart} from '@/hooks/use-cart'
+import {formatCurrency} from '@/lib/formatters'
 
 interface Props {
   product?: Product
 }
 export default function ProductCard({product}: Props) {
+  const {addItem, items} = useCart()
   const [rating, setRating] = useState<number>(1)
   const defaultImage = product?.assets[0]?.asset.fileInfo?.url ?? ''
   const [mainImage, setMainImage] = useState<string>(defaultImage)
   if (!product) return null
   const description = product.description ?? ''
   const shouldTruncate = description.length > 50
+  const isInCart = items.some((item) => item.productId === product.id)
 
   return (
     <Card className='relative flex min-w-[180px] max-w-[300px] flex-col gap-4 overflow-hidden rounded-none border-none shadow-none'>
@@ -53,14 +57,33 @@ export default function ProductCard({product}: Props) {
 
         <Button
           variant='ghost'
+          onClick={() =>
+            addItem({
+              productId: product.id,
+              variantId: null,
+              price: parseInt(product.price),
+              name: product.name,
+              quantity: 1,
+              image: mainImage,
+            })
+          }
           className='w-fit rounded-full border bg-primary text-white hover:bg-primary/90 hover:text-white'
+          disabled={isInCart}
         >
-          <PlusIcon className='size-4' /> Add
+          {isInCart ? (
+            <div className='flex items-center gap-2'>
+              <CheckCircle2 className='text-green-400' /> Added
+            </div>
+          ) : (
+            <>
+              <PlusIcon className='size-4' /> Add
+            </>
+          )}{' '}
         </Button>
 
         <Link href={`/product/${product.id}`}>
           <div className='mt-4 flex flex-col justify-between gap-1'>
-            <p className='text-2xl font-semibold'>{product?.price}</p>
+            <p className='text-2xl font-semibold'>{formatCurrency(product.price)}</p>
             <div>{shouldTruncate ? `${description.substring(0, 50)}...` : description}</div>
           </div>
         </Link>

@@ -20,7 +20,7 @@ export default function CartIcon() {
       <SheetTrigger asChild className='flex items-center justify-center hover:cursor-pointer'>
         <Toggle asChild className='size-5 rounded-full md:size-9'>
           <div className='relative'>
-            <div className='absolute right-0 top-0 flex size-4 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white'>
+            <div className='absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white'>
               {totalQuantity}
             </div>
 
@@ -40,7 +40,7 @@ export default function CartIcon() {
         {isCartEmpty ? (
           <Empty />
         ) : (
-          <div className='my-10'>
+          <div className='my-6 max-h-[90vh] overflow-y-auto'>
             <div>
               <ul>
                 {items.map((product, index) => (
@@ -88,7 +88,7 @@ export default function CartIcon() {
                           <span>{formatCurrency(product.price * product.quantity)}</span>
                         </div>
                       </div>
-                      <div>
+                      <div className='flex items-center'>
                         <Button
                           size={'icon'}
                           variant='outline'

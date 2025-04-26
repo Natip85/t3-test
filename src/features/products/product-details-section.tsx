@@ -90,7 +90,7 @@ export default function ProductDetailsSection({product}: Props) {
         </div>
       </div>
 
-      <div className='flex flex-1 flex-col gap-10'>
+      <div className='flex h-fit flex-1 flex-col gap-10 rounded-lg border p-3 shadow-md'>
         <div className='text-2xl font-semibold text-green-400 md:text-3xl'>
           {formatCurrency(
             selectedVariantAsset?.variant ? parseInt(selectedVariantAsset?.variant.price) : product.price || 0
@@ -148,10 +148,7 @@ export default function ProductDetailsSection({product}: Props) {
             </Button>
           )}
         </div>
-
-        <Button className='w-full rounded-full bg-destructive text-white' onClick={clearCart}>
-          Clear Cart
-        </Button>
+        <Separator />
       </div>
     </div>
   )
