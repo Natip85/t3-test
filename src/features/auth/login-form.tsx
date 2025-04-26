@@ -10,13 +10,16 @@ import {zodResolver} from '@hookform/resolvers/zod'
 import {Form, FormControl, FormField, FormItem, FormMessage} from '@/ui/form'
 import {Input} from '@/ui/input'
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from '@/ui/card'
+import {useSearchParams} from 'next/navigation'
 
 export const LoginSchema = z.object({
   email: z.string().email({message: 'Invalid email address'}),
 })
 export type LoginSchemaType = z.infer<typeof LoginSchema>
 
-export function LoginForm({callbackUrl = '/cart'}: {callbackUrl?: string}) {
+export function LoginForm({callbackUrl}: {callbackUrl?: string}) {
+  const searchParams = useSearchParams()
+  const urlCallback = searchParams.get('callbackUrl') || '/'
   const form = useForm<LoginSchemaType>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
@@ -26,7 +29,7 @@ export function LoginForm({callbackUrl = '/cart'}: {callbackUrl?: string}) {
   const onSubmit = async (values: LoginSchemaType) => {
     void signIn('resend', {
       email: values.email,
-      callbackUrl,
+      callbackUrl: callbackUrl || urlCallback,
     })
   }
 
@@ -72,7 +75,7 @@ export function LoginForm({callbackUrl = '/cart'}: {callbackUrl?: string}) {
             className='w-full'
             onClick={() =>
               signIn('google', {
-                callbackUrl,
+                callbackUrl: callbackUrl || urlCallback,
               })
             }
           >

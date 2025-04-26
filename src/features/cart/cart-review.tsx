@@ -23,7 +23,7 @@ export default function CartReview() {
           </div>
           {!isAuthenticated && (
             <>
-              <Button onClick={() => router.push(`/auth/login?callbackUrl=cart`)} className='w-full rounded-full'>
+              <Button onClick={() => router.push(`/auth/login?callbackUrl=/cart`)} className='w-full rounded-full'>
                 Sign in
               </Button>
               <Separator />
