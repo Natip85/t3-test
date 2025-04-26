@@ -39,7 +39,6 @@ export default function AddProductToCartSection({product}: Props) {
               className='rounded-full text-white'
               onClick={() => {
                 console.log('Plus clicked')
-                // handle increase
               }}
             >
               <PlusIcon />
