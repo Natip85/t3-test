@@ -60,43 +60,26 @@ export default function Navbar() {
   const {user, isAuthenticated} = useUser()
   return (
     <header className='sticky top-0 z-50 w-full border-b bg-white dark:border-gray-800 dark:bg-gray-950'>
-      <div className='mx-auto flex h-16 items-center justify-between gap-6 px-6 md:px-12'>
+      <div className='mx-auto flex h-16 items-center justify-between gap-6 px-6 lg:px-12'>
         <div className='flex items-center gap-10'>
-          <Link href='/' className='flex items-center gap-2' prefetch={false}>
+          <Link href='/' className='hidden items-center gap-2 lg:flex' prefetch={false}>
             <MountainIcon className='h-6 w-6' />
             <span className='sr-only'>Acme Inc</span>
           </Link>
-          <NavbarLinks />
-        </div>
-        <div className='max-w-2xl flex-1'>
-          <Suspense fallback={<div>Loading search...</div>}>
-            <NavbarSearch />
-          </Suspense>
-        </div>
-        <div className='flex items-center gap-2 md:gap-5'>
-          <ThemeToggle />
-          {hasRole(user, ['admin', 'investigator', 'owner', 'staff']) && (
-            <Button asChild size='sm' className='hidden md:flex'>
-              <Link href='/admin/users'>ADMIN</Link>
-            </Button>
-          )}
-          <span className='hidden md:block'>{isAuthenticated && <UserAccountNav />}</span>
-          {!isAuthenticated && (
-            <Button asChild size='sm' className='hidden md:flex'>
-              <Link href='/auth/login'>LOG IN</Link>
-            </Button>
-          )}
-          <div>
-            <CartIcon />
-          </div>
           <Sheet>
-            <SheetTrigger asChild className='md:hidden'>
+            <SheetTrigger asChild className='lg:hidden'>
               <Button variant='ghost' size='icon' className='rounded-full'>
                 <MenuIcon className='size-5' />
                 <span className='sr-only'>Toggle navigation menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side='left' className='flex flex-col justify-between gap-10 md:hidden'>
+            <SheetContent side='left' className='flex flex-col justify-between gap-10 lg:hidden'>
+              <div>
+                <Link href='/' className='flex items-center gap-5' prefetch={false}>
+                  <MountainIcon className='h-6 w-6' /> T3-TEST
+                  <span className='sr-only'>Acme Inc</span>
+                </Link>
+              </div>
               {!isAuthenticated && (
                 <Button asChild size='sm'>
                   <Link href='/auth/login'>LOG IN</Link>
@@ -107,6 +90,27 @@ export default function Navbar() {
               <MobileNavbarLinks />
             </SheetContent>
           </Sheet>
+          <NavbarLinks />
+        </div>
+        <div className='flex max-w-2xl flex-1'>
+          <Suspense fallback={<div>Loading search...</div>}>
+            <NavbarSearch />
+          </Suspense>
+        </div>
+        <div className='flex items-center gap-2 md:gap-4'>
+          <ThemeToggle />
+          {hasRole(user, ['admin', 'investigator', 'owner', 'staff']) && (
+            <Button asChild size='sm' className='hidden lg:flex'>
+              <Link href='/admin/users'>ADMIN</Link>
+            </Button>
+          )}
+          <span className='hidden lg:block'>{isAuthenticated && <UserAccountNav />}</span>
+          {!isAuthenticated && (
+            <Button asChild size='sm' className='hidden lg:flex'>
+              <Link href='/auth/login'>LOG IN</Link>
+            </Button>
+          )}
+          <CartIcon />
         </div>
       </div>
     </header>

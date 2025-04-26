@@ -3,7 +3,7 @@ import {env} from '@/env'
 
 import {desc, eq, inArray, and, ilike, or, not} from 'drizzle-orm'
 
-import {createTRPCRouter, protectedProcedure} from '@/server/api/trpc'
+import {createTRPCRouter, protectedProcedure, publicProcedure} from '@/server/api/trpc'
 
 import {hasPermission} from '@/lib/permissions'
 import {
@@ -53,7 +53,7 @@ export const productsRouter = createTRPCRouter({
     })
   }),
 
-  getById: protectedProcedure.input(z.number()).query(async ({ctx, input}) => {
+  getById: publicProcedure.input(z.number()).query(async ({ctx, input}) => {
     const data = await ctx.db.query.products.findFirst({
       where: eq(productTable.id, input),
       with: {
@@ -64,6 +64,7 @@ export const productsRouter = createTRPCRouter({
                 value: {with: {option: true}},
               },
             },
+            assets: {with: {variantAsset: true}},
           },
         },
         options: {
@@ -77,17 +78,17 @@ export const productsRouter = createTRPCRouter({
     return data
   }),
 
-  getSearchInputTermProducts: protectedProcedure
+  getSearchInputTermProducts: publicProcedure
     .input(
       z.object({
         searchTerm: z.string(),
       })
     )
     .query(async ({ctx, input}) => {
-      const userId = ctx.session?.user.id
-      if (!userId) {
-        throw new TRPCError({code: 'UNAUTHORIZED'})
-      }
+      // const userId = ctx.session?.user.id
+      // if (!userId) {
+      //   throw new TRPCError({code: 'UNAUTHORIZED'})
+      // }
 
       const term = `%${input.searchTerm}%`
 
@@ -168,17 +169,17 @@ export const productsRouter = createTRPCRouter({
       const finalResults = [...matchedResults, ...fallbackResults].slice(0, 5)
       return finalResults
     }),
-  getSearchTermProducts: protectedProcedure
+  getSearchTermProducts: publicProcedure
     .input(
       z.object({
         searchTerm: z.string(),
       })
     )
     .query(async ({ctx, input}) => {
-      const userId = ctx.session?.user.id
-      if (!userId) {
-        throw new TRPCError({code: 'UNAUTHORIZED'})
-      }
+      // const userId = ctx.session?.user.id
+      // if (!userId) {
+      //   throw new TRPCError({code: 'UNAUTHORIZED'})
+      // }
 
       const term = `%${input.searchTerm}%`
 
@@ -211,10 +212,10 @@ export const productsRouter = createTRPCRouter({
             },
           },
         },
-        limit: 5,
+        // limit: 5,
       })
 
-      return matchedResults // Will return [] if nothing matched
+      return matchedResults
     }),
 
   createProduct: protectedProcedure.input(adminProductSelectSchema).mutation(async ({ctx, input}) => {

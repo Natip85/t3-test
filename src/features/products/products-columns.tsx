@@ -4,41 +4,35 @@ import {type ColumnDef} from '@tanstack/react-table'
 import {DataTableColumnHeader} from '@/components/table/data-table-column-header'
 import {ProductsRowActions} from './products-row-actions'
 import {Button} from '@/ui/button'
-import {type Product} from './product-types'
+import {type ProductSelect, type Product} from './product-types'
 import {formatCurrency} from '@/lib/formatters'
 import Image from 'next/image'
 import {ImageIcon} from 'lucide-react'
 
-export const columns: ColumnDef<Product>[] = [
+export const columns: ColumnDef<ProductSelect>[] = [
   {
     accessorKey: 'id',
     header: ({column}) => <DataTableColumnHeader column={column} title='ID' />,
     cell: ({row}) => <div>{row.original.id}</div>,
   },
   {
-    accessorKey: 'image',
-    header: ({}) => <Button variant={'ghost'}>Image</Button>,
+    accessorKey: 'name',
+    header: ({column}) => <DataTableColumnHeader column={column} title='Name' />,
     cell: ({row}) => {
+      const imageUrl = (row.original as Product).assets[0]?.asset.fileInfo?.url ?? ''
       return (
-        <div className='relative aspect-square h-10 w-10'>
-          {row.original.assets[0]?.asset.fileInfo?.url ? (
-            <Image
-              src={row.original.assets[0]?.asset.fileInfo?.url ?? ''}
-              alt='product img'
-              fill
-              className='rounded-md object-cover'
-            />
-          ) : (
-            <ImageIcon className='size-full' />
-          )}
+        <div className='flex items-center gap-3'>
+          <div className='relative aspect-square h-10 w-10'>
+            {imageUrl ? (
+              <Image src={imageUrl} alt='product img' fill className='rounded-md object-cover' />
+            ) : (
+              <ImageIcon className='size-full' />
+            )}
+          </div>
+          <div className='flex items-center gap-2'>{row.original.name ?? ''}</div>
         </div>
       )
     },
-  },
-  {
-    accessorKey: 'name',
-    header: ({column}) => <DataTableColumnHeader column={column} title='Name' />,
-    cell: ({row}) => <div className='flex items-center gap-2'>{row.original.name ?? ''}</div>,
   },
   {
     accessorKey: 'price',

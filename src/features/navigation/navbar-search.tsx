@@ -1,12 +1,14 @@
 'use client'
 import {useRef, useState, useEffect, type KeyboardEvent, type ChangeEvent} from 'react'
-import {Search} from 'lucide-react'
+import {Loader2, Search} from 'lucide-react'
 import {Input} from '@/components/ui/input'
 import {useRouter} from 'next/navigation'
 import {Button} from '@/ui/button'
 import {useQueryStates} from 'nuqs'
 import {pageSearchParams} from '@/hooks/use-search-params'
 import {api} from '@/trpc/react'
+import Link from 'next/link'
+import Image from 'next/image'
 
 export default function NavbarSearch() {
   const router = useRouter()
@@ -36,9 +38,9 @@ export default function NavbarSearch() {
     const newValue = e.target.value
     await setSearchParams({searchTerm: newValue})
 
-    if (newValue === '') {
-      handleSearch('')
-    }
+    // if (newValue === '') {
+    //   handleSearch('')
+    // }
   }
 
   useEffect(() => {
@@ -75,18 +77,47 @@ export default function NavbarSearch() {
       />
 
       {isFocused && (
-        <div className='absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-md border bg-white p-2 shadow-lg dark:bg-zinc-900'>
-          {isPending && <div className='text-center'>Loading...</div>}
-          {data?.map((product) => (
-            <Button
-              key={product.id}
-              onClick={() => {
-                router.push(`/search?searchTerm=${product.name}`)
-              }}
-            >
-              {product.name}
-            </Button>
-          ))}
+        <div className='absolute z-20 -ml-20 mt-1 max-h-screen max-w-[100vw] space-y-4 overflow-y-auto rounded-md border bg-background p-5 shadow-lg sm:ml-0 sm:w-full lg:ml-0'>
+          {isPending ? (
+            <div className='flex items-center justify-center gap-3'>
+              <Loader2 className='animate-spin' />
+              <span> Loading...</span>
+            </div>
+          ) : (
+            <div className='flex flex-col gap-5'>
+              <h2 className='mb-2 border-b text-xl font-semibold'>Product selection</h2>
+              <div className='flex gap-3 overflow-x-auto p-2'>
+                {data?.map((product) => (
+                  <Link href={`/product/${product.id}`} key={product.id}>
+                    <div
+                      className='relative aspect-square size-20 cursor-pointer'
+                      onClick={() => {
+                        setIsFocused(false)
+                        inputRef.current?.blur()
+                      }}
+                    >
+                      <Image
+                        src={product.assets[0]?.asset.fileInfo?.url || ''}
+                        alt='Product Image'
+                        fill
+                        className='rounded-full object-cover'
+                      />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+              <div>
+                <div className='flex flex-col gap-2'>
+                  <h2 className='mb-2 border-b text-xl font-semibold'>Results</h2>
+                  {data?.map((product) => (
+                    <Link href={`/search?searchTerm=${product.name}`} key={product.id}>
+                      {product.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

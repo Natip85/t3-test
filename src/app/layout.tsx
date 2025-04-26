@@ -14,6 +14,7 @@ import {Toaster} from '@/ui/toaster'
 // import { AnalyticsProvider } from "@/features/analytics/provider";
 import {CookieBanner} from '@/features/analytics/banner'
 import NuqsProvider from '@/components/nuqs-provider'
+import CartProvider from '@/lib/cart-provider'
 
 export const metadata: Metadata = {
   title: 'T3-Test',
@@ -34,7 +35,9 @@ export default function RootLayout({children}: Readonly<{children: React.ReactNo
           <NextSSRPlugin routerConfig={extractRouterConfig(ourFileRouter)} />
           <SessionProvider>
             <ThemeProvider attribute='class' defaultTheme='dark' enableSystem>
-              <NuqsProvider>{children}</NuqsProvider>
+              <NuqsProvider>
+                <CartProvider>{children}</CartProvider>
+              </NuqsProvider>
               <Toaster />
               <CookieBanner />
             </ThemeProvider>
