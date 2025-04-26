@@ -4,7 +4,7 @@ import {createContext, useContext, useEffect, useState} from 'react'
 
 export interface CartItem {
   productId: number
-  variantId: number
+  variantId?: number | null
   name: string
   price: number
   quantity: number
@@ -19,8 +19,9 @@ export interface CartState {
 
 interface CartContextType extends CartState {
   addItem: (item: CartItem) => void
-  removeItem: (id: number) => void
+  removeItem: (productId: number, variantId: number | null) => void
   clearCart: () => void
+  updateQuantity: (productId: number, variantId: number | null, quantity: number) => void
 }
 
 // Create context
@@ -67,12 +68,14 @@ const CartContextProvider = ({children}: {children: React.ReactNode}) => {
   }
 
   const addItem = (item: CartItem) => {
-    const existing = cart.items.find((i) => i.productId === item.productId)
+    const existing = cart.items.find((i) => i.productId === item.productId && i.variantId === item.variantId)
     let updatedItems
 
     if (existing) {
       updatedItems = cart.items.map((i) =>
-        i.productId === item.productId ? {...i, quantity: i.quantity + item.quantity} : i
+        i.productId === item.productId && i.variantId === item.variantId
+          ? {...i, quantity: i.quantity + item.quantity}
+          : i
       )
     } else {
       updatedItems = [...cart.items, item]
@@ -80,9 +83,21 @@ const CartContextProvider = ({children}: {children: React.ReactNode}) => {
 
     updateTotals(updatedItems)
   }
+  const updateQuantity = (productId: number, variantId: number | null, quantity: number) => {
+    const updatedItems = cart.items
+      .map((item) => {
+        if (item.productId === productId && item.variantId === variantId) {
+          return {...item, quantity}
+        }
+        return item
+      })
+      .filter((item) => item.quantity > 0)
 
-  const removeItem = (id: number) => {
-    const updatedItems = cart.items.filter((item) => item.productId !== id)
+    updateTotals(updatedItems)
+  }
+
+  const removeItem = (productId: number, variantId: number | null) => {
+    const updatedItems = cart.items.filter((item) => !(item.productId === productId && item.variantId === variantId))
     updateTotals(updatedItems)
   }
 
@@ -90,7 +105,11 @@ const CartContextProvider = ({children}: {children: React.ReactNode}) => {
     setCart({items: [], totalAmount: 0, totalQuantity: 0})
   }
 
-  return <CartContext.Provider value={{...cart, addItem, removeItem, clearCart}}>{children}</CartContext.Provider>
+  return (
+    <CartContext.Provider value={{...cart, addItem, removeItem, clearCart, updateQuantity}}>
+      {children}
+    </CartContext.Provider>
+  )
 }
 
 // Hook to use cart context
