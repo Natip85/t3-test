@@ -8,11 +8,14 @@ import Image from 'next/image'
 import {useRouter} from 'next/navigation'
 import Empty from '@/assets/images/empty.svg'
 import {useUser} from '@/hooks/use-user'
+import {api} from '@/trpc/react'
 
 export default function CartReview() {
-  const {isAuthenticated} = useUser()
+  const {isAuthenticated, user} = useUser()
   const router = useRouter()
   const {totalAmount, removeItem, updateQuantity, items, totalQuantity} = useCart()
+  const {mutateAsync: createCart, isPending: isLoading} = api.carts.createCart.useMutation()
+
   if (items.length === 0) {
     return (
       <div className='flex min-h-screen flex-col'>
@@ -37,6 +40,10 @@ export default function CartReview() {
         </div>
       </div>
     )
+  }
+  const handleCheckout = async () => {
+    const res = await createCart({items, totalAmount, totalQuantity, userId: user.id})
+    router.push(`/checkout?cartId=${res}`)
   }
   return (
     <div className='mx-auto flex flex-col gap-10 md:flex-row'>
@@ -116,18 +123,9 @@ export default function CartReview() {
         </div>
         <Separator />
         <div className='my-20 flex flex-col gap-3'>
-          <Button
-            className='rounded-full'
-            onClick={() => {
-              if (!isAuthenticated) {
-                router.push('/auth/login?callbackUrl=/checkout')
-              } else {
-                router.push('/checkout')
-              }
-            }}
-          >
+          <Button disabled={isLoading} className='rounded-full' onClick={handleCheckout}>
             Checkout
-          </Button>{' '}
+          </Button>
         </div>
       </div>
     </div>

@@ -22,7 +22,7 @@ export default function ProductDetailsSection({product}: Props) {
     variant: VariantSelect
     imageUrl: string
   } | null>(null)
-  const {items, addItem, clearCart, updateQuantity} = useCart()
+  const {items, addItem, updateQuantity} = useCart()
 
   if (!product) return null
 
