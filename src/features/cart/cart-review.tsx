@@ -116,7 +116,18 @@ export default function CartReview() {
         </div>
         <Separator />
         <div className='my-20 flex flex-col gap-3'>
-          <Button className='rounded-full'>Checkout</Button>
+          <Button
+            className='rounded-full'
+            onClick={() => {
+              if (!isAuthenticated) {
+                router.push('/auth/login?callbackUrl=/checkout')
+              } else {
+                router.push('/checkout')
+              }
+            }}
+          >
+            Checkout
+          </Button>{' '}
         </div>
       </div>
     </div>
