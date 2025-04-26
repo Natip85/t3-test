@@ -11,7 +11,7 @@ import {Button} from '@/ui/button'
 import {Sheet, SheetContent, SheetTrigger} from '@/ui/sheet'
 import MobileNavbarLinks from './mobile-navbar-links'
 import {useUser} from '@/hooks/use-user'
-// import {Suspense} from 'react'
+import {Suspense} from 'react'
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
   className?: string
@@ -93,9 +93,9 @@ export default function Navbar() {
           <NavbarLinks />
         </div>
         <div className='flex max-w-2xl flex-1'>
-          {/* <Suspense fallback={<div>Loading search...</div>}> */}
-          <NavbarSearch />
-          {/* </Suspense> */}
+          <Suspense fallback={<div>Loading search...</div>}>
+            <NavbarSearch />
+          </Suspense>
         </div>
         <div className='flex items-center gap-2 md:gap-4'>
           <ThemeToggle />
