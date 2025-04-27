@@ -11,10 +11,10 @@ import {useUser} from '@/hooks/use-user'
 import {api} from '@/trpc/react'
 
 export default function CartReview() {
-  const {isAuthenticated, user} = useUser()
+  const {isAuthenticated} = useUser()
   const router = useRouter()
   const {totalAmount, removeItem, updateQuantity, items, totalQuantity} = useCart()
-  const {mutateAsync: createCart, isPending: isLoading} = api.carts.createCart.useMutation()
+  const {data} = api.carts.getUserCart.useQuery()
 
   if (items.length === 0) {
     return (
@@ -42,8 +42,9 @@ export default function CartReview() {
     )
   }
   const handleCheckout = async () => {
-    const res = await createCart({items, totalAmount, totalQuantity, userId: user.id})
-    router.push(`/checkout?cartId=${res}`)
+    if (!isAuthenticated) return router.push(`/auth/login?callbackUrl=/cart`)
+
+    router.push(`/checkout?cartId=${data?.id}`)
   }
   return (
     <div className='mx-auto flex flex-col gap-10 md:flex-row'>
@@ -123,7 +124,7 @@ export default function CartReview() {
         </div>
         <Separator />
         <div className='my-20 flex flex-col gap-3'>
-          <Button disabled={isLoading} className='rounded-full' onClick={handleCheckout}>
+          <Button className='rounded-full' onClick={handleCheckout}>
             Checkout
           </Button>
         </div>

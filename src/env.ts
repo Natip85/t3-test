@@ -34,6 +34,7 @@ export const env = createEnv({
     NEXT_PUBLIC_POSTHOG_HOST: z.string(),
     NEXT_PUBLIC_IS_DEV: z.boolean(),
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string(),
+    NEXT_PUBLIC_SERVER_URL: z.string(),
   },
 
   /**
@@ -56,6 +57,7 @@ export const env = createEnv({
     NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+    NEXT_PUBLIC_SERVER_URL: process.env.NEXT_PUBLIC_SERVER_URL,
     NEXT_PUBLIC_IS_DEV: process.env.NODE_ENV === 'development',
   },
   /**

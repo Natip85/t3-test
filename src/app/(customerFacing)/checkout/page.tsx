@@ -1,3 +1,33 @@
-export default async function CheckoutPage() {
-  return <div>CheckoutPage</div>
+import CheckoutForm from '@/features/cart/checkout-form'
+import {api} from '@/trpc/server'
+import Stripe from 'stripe'
+
+type Props = {
+  searchParams: Promise<{cartId: string}>
+}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+
+export default async function CheckoutPage({searchParams}: Props) {
+  const {cartId} = await searchParams
+  const cart = await api.carts.getById(Number(cartId))
+  if (!cart) {
+    return <div>Cart not found</div>
+  }
+  console.log('cart.totalAmount:', cart.totalAmount)
+  console.log('typeof cart.totalAmount:', typeof cart.totalAmount)
+  console.log('currency:', 'usd')
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: cart.totalAmount,
+    currency: 'USD',
+    metadata: {cartId},
+  })
+
+  if (paymentIntent.client_secret == null) {
+    throw Error('Stripe failed to create payment intent')
+  }
+  return (
+    <div className='flex-1 p-2 md:p-5'>
+      <CheckoutForm cart={cart} clientSecret={paymentIntent.client_secret} />
+    </div>
+  )
 }
