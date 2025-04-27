@@ -102,11 +102,11 @@ export default function ProductDetailsSection({product}: Props) {
               <Button
                 type='button'
                 className='rounded-full text-white hover:bg-blue-800'
-                onClick={() => {
+                onClick={async () => {
                   if (quantity > 1) {
-                    updateQuantity(product.id, selectedVariantAsset?.variant.id ?? null, quantity - 1)
+                    await updateQuantity(product.id, selectedVariantAsset?.variant.id ?? null, quantity - 1)
                   } else {
-                    updateQuantity(product.id, selectedVariantAsset?.variant.id ?? null, 0)
+                    await updateQuantity(product.id, selectedVariantAsset?.variant.id ?? null, 0)
                   }
                 }}
               >
@@ -116,8 +116,8 @@ export default function ProductDetailsSection({product}: Props) {
               <Button
                 type='button'
                 className='rounded-full text-white hover:bg-blue-800'
-                onClick={() => {
-                  updateQuantity(product.id, selectedVariantAsset?.variant.id ?? null, quantity + 1)
+                onClick={async () => {
+                  await updateQuantity(product.id, selectedVariantAsset?.variant.id ?? null, quantity + 1)
                 }}
               >
                 <PlusIcon />
@@ -126,9 +126,9 @@ export default function ProductDetailsSection({product}: Props) {
           ) : (
             <Button
               className='w-full rounded-full bg-primary text-white'
-              onClick={() => {
+              onClick={async () => {
                 if (hasVariants && !selectedVariantAsset?.variant) return
-                addItem({
+                await addItem({
                   productId: product.id,
                   variantId: selectedVariantAsset?.variant.id ?? null,
                   price: selectedVariantAsset ? parseInt(selectedVariantAsset.variant.price) : parseInt(product.price),

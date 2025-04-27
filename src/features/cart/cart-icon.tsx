@@ -63,12 +63,12 @@ export default function CartIcon() {
                             <Button
                               type='button'
                               className='rounded-full text-white hover:bg-blue-800'
-                              onClick={() => {
+                              onClick={async () => {
                                 const newQuantity = product.quantity - 1
                                 if (newQuantity <= 0) {
-                                  removeItem(product.productId, product.variantId ?? null)
+                                  await removeItem(product.productId, product.variantId ?? null)
                                 } else {
-                                  updateQuantity(product.productId, product.variantId ?? null, newQuantity)
+                                  await updateQuantity(product.productId, product.variantId ?? null, newQuantity)
                                 }
                               }}
                             >
@@ -78,8 +78,8 @@ export default function CartIcon() {
                             <Button
                               type='button'
                               className='rounded-full text-white hover:bg-blue-800'
-                              onClick={() => {
-                                updateQuantity(product.productId, product.variantId ?? null, product.quantity + 1)
+                              onClick={async () => {
+                                await updateQuantity(product.productId, product.variantId ?? null, product.quantity + 1)
                               }}
                             >
                               <PlusIcon />
