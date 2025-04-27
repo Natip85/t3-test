@@ -38,7 +38,6 @@ const CartContextProvider = ({children}: {children: React.ReactNode}) => {
     totalAmount: 0,
     totalQuantity: 0,
   })
-  console.log('cart context>>>>', cart)
   const [cartId, setCartId] = useState<number | null>(null)
   const {mutateAsync: create} = api.carts.createCart.useMutation()
   const {mutateAsync: add} = api.carts.addItem.useMutation()

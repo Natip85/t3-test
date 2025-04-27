@@ -10,7 +10,6 @@ interface ProductImageProps {
 const ProductImage = ({product}: ProductImageProps) => {
   const defaultImage = product?.assets[0]?.asset.fileInfo?.url ?? ''
   const [selectedImage, setSelectedImage] = useState<string>(defaultImage)
-  console.log('selectedImage', selectedImage)
 
   return (
     <div className='flex max-w-full flex-1 flex-col gap-2 sm:flex-row'>

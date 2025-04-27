@@ -17,8 +17,6 @@ export async function POST(req: NextRequest) {
     const charge = event.data.object
     const cartId = charge.metadata.cartId
 
-    console.log('charge-suceed>>>>', charge)
-
     if (!cartId) {
       console.error('No cartId found in charge metadata.')
       return new NextResponse('Missing cartId', {status: 400})

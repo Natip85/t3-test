@@ -102,8 +102,6 @@ export default function CreateProductForm({product, variants}: Props) {
       description: `The product was deleted successfully`,
     })
   }
-  console.log('watch', form.watch())
-  console.log('errors', form.formState.errors)
 
   return (
     <div>
