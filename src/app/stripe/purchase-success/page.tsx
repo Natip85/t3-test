@@ -25,7 +25,7 @@ export default async function PurchaseSuccessPage({searchParams}: Props) {
         </div>
         <div>
           <Link href={'/'} className='mt-4'>
-            continue shopping{' '}
+            continue shopping
           </Link>
         </div>
       </div>

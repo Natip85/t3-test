@@ -4,7 +4,7 @@ import {type AdapterAccount} from 'next-auth/adapters'
 
 import * as Utils from '../utils'
 import {type UserLanguage, UserLanguages, type UserRole, UserRoles} from './schema-constants'
-import {cart} from '.'
+import {cart, order} from '.'
 import {assets} from './asset-schema'
 // import {assets} from './asset-schema'
 // import {incident, incidentBookmarks} from './incidents-schema'
@@ -40,6 +40,7 @@ export const usersRelations = relations(users, ({many, one}) => ({
   accounts: many(accounts),
   cart: one(cart),
   assets: many(assets),
+  orders: many(order),
   // bookmarks: many(productBookmark),
 }))
 

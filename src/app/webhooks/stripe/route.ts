@@ -1,6 +1,6 @@
 import {db} from '@/server/db'
 import {eq} from 'drizzle-orm'
-import {cart} from '@/server/db/schema'
+import {cart, order, orderItems} from '@/server/db/schema'
 import {type NextRequest, NextResponse} from 'next/server'
 import Stripe from 'stripe'
 
@@ -16,11 +16,51 @@ export async function POST(req: NextRequest) {
   if (event.type === 'charge.succeeded') {
     const charge = event.data.object
     const cartId = charge.metadata.cartId
-
+    const userId = charge.metadata.userId
+    if (!userId) {
+      return new NextResponse('Missing userId', {status: 400})
+    }
     if (!cartId) {
       console.error('No cartId found in charge metadata.')
       return new NextResponse('Missing cartId', {status: 400})
     }
+
+    const existingCart = await db.query.cart.findFirst({
+      where: (cart) => eq(cart.id, Number(cartId)),
+      with: {cartItems: true},
+    })
+
+    if (!existingCart) {
+      console.error('Cart not found')
+      return new NextResponse('Cart not found', {status: 404})
+    }
+
+    const [newOrder] = await db
+      .insert(order)
+      .values({
+        status: 'PAID',
+        userId: userId,
+        totalAmount: existingCart.totalAmount,
+        paymentIntentId: charge.payment_intent as string,
+      })
+      .returning({id: order.id})
+
+    if (!newOrder) {
+      return new NextResponse('Order id not found', {status: 404})
+    }
+
+    const orderItemsToCreate = existingCart.cartItems.map((item) => ({
+      orderId: newOrder?.id,
+      productId: item.productId,
+      variantId: item.variantId,
+      quantity: item.quantity,
+      price: item.price,
+      cartId: item.cartId,
+      name: item.name,
+      image: item.image,
+    }))
+
+    await db.insert(orderItems).values(orderItemsToCreate)
 
     await db.delete(cart).where(eq(cart.id, Number(cartId)))
   }

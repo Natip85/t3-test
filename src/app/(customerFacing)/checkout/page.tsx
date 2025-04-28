@@ -1,4 +1,5 @@
 import CheckoutForm from '@/features/cart/checkout-form'
+import {auth} from '@/server/auth'
 import {api} from '@/trpc/server'
 import Stripe from 'stripe'
 
@@ -8,6 +9,10 @@ type Props = {
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
 export default async function CheckoutPage({searchParams}: Props) {
+  const user = await auth()
+  if (!user?.user.id) {
+    return <div>No user id found</div>
+  }
   const {cartId} = await searchParams
   const cart = await api.carts.getById(Number(cartId))
   if (!cart) {
@@ -19,7 +24,7 @@ export default async function CheckoutPage({searchParams}: Props) {
   const paymentIntent = await stripe.paymentIntents.create({
     amount: cart.totalAmount,
     currency: 'USD',
-    metadata: {cartId},
+    metadata: {cartId, userId: user.user.id},
   })
 
   if (paymentIntent.client_secret == null) {
