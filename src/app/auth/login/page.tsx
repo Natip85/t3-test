@@ -2,6 +2,7 @@ import {LoginForm} from '@/features/auth/login-form'
 import {Button} from '@/components/ui/button'
 import {ArrowLeft} from 'lucide-react'
 import Link from 'next/link'
+import {Suspense} from 'react'
 
 export default function LoginPage() {
   return (
@@ -11,7 +12,9 @@ export default function LoginPage() {
           <ArrowLeft /> Back
         </Link>
       </Button>
-      <LoginForm />
+      <Suspense fallback={<div className='absolute inset-0 flex items-center justify-center'>Loading...</div>}>
+        <LoginForm />
+      </Suspense>
     </div>
   )
 }

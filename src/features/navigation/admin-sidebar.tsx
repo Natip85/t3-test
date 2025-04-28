@@ -52,7 +52,7 @@ export function AdminSidebar() {
               asChild
             >
               <Link href='/'>
-                <div className='flex items-center justify-center rounded-lg text-sidebar-primary-foreground'>
+                <div className='flex items-center justify-center rounded-lg text-primary'>
                   <MountainIcon className='size-8' />
                 </div>
                 <div className='flex h-full flex-col justify-end text-left text-sm leading-tight'>

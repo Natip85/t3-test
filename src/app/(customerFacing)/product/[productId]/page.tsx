@@ -1,4 +1,3 @@
-import AddProductToCartSection from '@/features/products/add-to-cart-section'
 import ProductDetailsSection from '@/features/products/product-details-section'
 import ProductImage from '@/features/products/product-image'
 import {api} from '@/trpc/server'
@@ -16,8 +15,6 @@ export default async function ProductPage({params}: Props) {
         <ProductImage product={product} />
       </div>
       <ProductDetailsSection product={product} />
-
-      <AddProductToCartSection product={product} />
     </div>
   )
 }

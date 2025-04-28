@@ -23,7 +23,7 @@ export default async function SearchPage({searchParams}: PageProps) {
       </div>
 
       {results.length ? (
-        <div>
+        <div className='mt-10'>
           <SearchResults results={results} />
         </div>
       ) : (

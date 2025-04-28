@@ -47,7 +47,8 @@ CREATE TABLE "auth_verification_token" (
 CREATE TABLE "cart" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"user_id" varchar(500) NOT NULL,
-	"date" timestamp with time zone,
+	"total_amount" integer DEFAULT 0 NOT NULL,
+	"total_quantity" integer DEFAULT 0 NOT NULL,
 	"created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	"updated_at" timestamp with time zone
 );
@@ -55,8 +56,12 @@ CREATE TABLE "cart" (
 CREATE TABLE "cart_item" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"cart_id" integer NOT NULL,
-	"product_variant_id" integer,
+	"product_id" integer NOT NULL,
+	"variant_id" integer,
+	"name" text NOT NULL,
+	"price" integer NOT NULL,
 	"quantity" integer DEFAULT 1 NOT NULL,
+	"image" text,
 	"created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	"updated_at" timestamp with time zone
 );
@@ -131,11 +136,35 @@ CREATE TABLE "asset" (
 	"updated_at" timestamp with time zone
 );
 --> statement-breakpoint
+CREATE TABLE "order" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"user_id" varchar(500) NOT NULL,
+	"total_amount" integer NOT NULL,
+	"status" varchar(50) NOT NULL,
+	"payment_intent_id" varchar(255) NOT NULL,
+	"created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	"updated_at" timestamp with time zone
+);
+--> statement-breakpoint
+CREATE TABLE "order_items" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"order_id" integer NOT NULL,
+	"product_id" integer NOT NULL,
+	"variant_id" integer,
+	"name" text NOT NULL,
+	"price" integer NOT NULL,
+	"quantity" integer DEFAULT 1 NOT NULL,
+	"image" text,
+	"created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	"updated_at" timestamp with time zone
+);
+--> statement-breakpoint
 ALTER TABLE "auth_account" ADD CONSTRAINT "auth_account_user_id_auth_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."auth_user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "auth_session" ADD CONSTRAINT "auth_session_user_id_auth_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."auth_user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "cart" ADD CONSTRAINT "cart_user_id_auth_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."auth_user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "cart_item" ADD CONSTRAINT "cart_item_cart_id_cart_id_fk" FOREIGN KEY ("cart_id") REFERENCES "public"."cart"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "cart_item" ADD CONSTRAINT "cart_item_product_variant_id_variants_id_fk" FOREIGN KEY ("product_variant_id") REFERENCES "public"."variants"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "cart_item" ADD CONSTRAINT "cart_item_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "cart_item" ADD CONSTRAINT "cart_item_variant_id_variants_id_fk" FOREIGN KEY ("variant_id") REFERENCES "public"."variants"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "option_values" ADD CONSTRAINT "option_values_option_id_product_options_id_fk" FOREIGN KEY ("option_id") REFERENCES "public"."product_options"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "product_asset" ADD CONSTRAINT "product_asset_prod_id_products_id_fk" FOREIGN KEY ("prod_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "product_asset" ADD CONSTRAINT "product_asset_asset_id_asset_id_fk" FOREIGN KEY ("asset_id") REFERENCES "public"."asset"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -146,6 +175,10 @@ ALTER TABLE "variant_option_values" ADD CONSTRAINT "variant_option_values_varian
 ALTER TABLE "variant_option_values" ADD CONSTRAINT "variant_option_values_option_value_id_option_values_id_fk" FOREIGN KEY ("option_value_id") REFERENCES "public"."option_values"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "variants" ADD CONSTRAINT "variants_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "asset" ADD CONSTRAINT "asset_created_by_user_id_auth_user_id_fk" FOREIGN KEY ("created_by_user_id") REFERENCES "public"."auth_user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "order" ADD CONSTRAINT "order_user_id_auth_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."auth_user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "order_items" ADD CONSTRAINT "order_items_order_id_order_id_fk" FOREIGN KEY ("order_id") REFERENCES "public"."order"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "order_items" ADD CONSTRAINT "order_items_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "order_items" ADD CONSTRAINT "order_items_variant_id_variants_id_fk" FOREIGN KEY ("variant_id") REFERENCES "public"."variants"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "account_user_id_idx" ON "auth_account" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "session_user_id_idx" ON "auth_session" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "user_email_idx" ON "auth_user" USING btree ("email");--> statement-breakpoint
@@ -153,7 +186,7 @@ CREATE INDEX "verification_token_identifier_idx" ON "auth_verification_token" US
 CREATE INDEX "verification_token_expires_idx" ON "auth_verification_token" USING btree ("expires");--> statement-breakpoint
 CREATE INDEX "cart_user_unique" ON "cart" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "cart_id_idx" ON "cart_item" USING btree ("cart_id");--> statement-breakpoint
-CREATE INDEX "cart_variant_idx" ON "cart_item" USING btree ("cart_id","product_variant_id");--> statement-breakpoint
+CREATE INDEX "cart_variant_idx" ON "cart_item" USING btree ("cart_id","variant_id");--> statement-breakpoint
 CREATE INDEX "option_values_option_id_idx" ON "option_values" USING btree ("option_id");--> statement-breakpoint
 CREATE INDEX "product_asset_product_id_idx" ON "product_asset" USING btree ("prod_id");--> statement-breakpoint
 CREATE INDEX "product_asset_asset_id_idx" ON "product_asset" USING btree ("asset_id");--> statement-breakpoint
@@ -167,4 +200,7 @@ CREATE INDEX "variants_product_id_idx" ON "variants" USING btree ("product_id");
 CREATE INDEX "variants_sku_idx" ON "variants" USING btree ("sku");--> statement-breakpoint
 CREATE INDEX "asset_created_by_user_id_idx" ON "asset" USING btree ("created_by_user_id");--> statement-breakpoint
 CREATE INDEX "asset_type_idx" ON "asset" USING btree ("type");--> statement-breakpoint
-CREATE INDEX "asset_url_idx" ON "asset" USING btree ("url");
+CREATE INDEX "asset_url_idx" ON "asset" USING btree ("url");--> statement-breakpoint
+CREATE INDEX "order_user_unique" ON "order" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "order_id_idx" ON "order_items" USING btree ("order_id");--> statement-breakpoint
+CREATE INDEX "order_variant_idx" ON "order_items" USING btree ("order_id","variant_id");
