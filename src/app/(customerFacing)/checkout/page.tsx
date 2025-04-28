@@ -18,9 +18,7 @@ export default async function CheckoutPage({searchParams}: Props) {
   if (!cart) {
     return <div>Cart not found</div>
   }
-  console.log('cart.totalAmount:', cart.totalAmount)
-  console.log('typeof cart.totalAmount:', typeof cart.totalAmount)
-  console.log('currency:', 'usd')
+
   const paymentIntent = await stripe.paymentIntents.create({
     amount: cart.totalAmount,
     currency: 'USD',
