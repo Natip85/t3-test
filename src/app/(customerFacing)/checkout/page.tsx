@@ -18,6 +18,7 @@ export default async function CheckoutPage({searchParams}: Props) {
   if (!cart) {
     return <div>Cart not found</div>
   }
+  console.log('rerfefere')
 
   const paymentIntent = await stripe.paymentIntents.create({
     amount: cart.totalAmount,
