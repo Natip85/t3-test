@@ -12,7 +12,16 @@ export const ordersRouter = createTRPCRouter({
         items: true,
       },
     })
-    console.log('errerereree')
+
+    return data
+  }),
+  getAllByUser: protectedProcedure.query(async ({ctx}) => {
+    const data = await ctx.db.query.order.findMany({
+      where: eq(order.userId, ctx.session.user.id),
+      with: {
+        items: true,
+      },
+    })
 
     return data
   }),
