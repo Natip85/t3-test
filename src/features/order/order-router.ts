@@ -12,6 +12,7 @@ export const ordersRouter = createTRPCRouter({
         items: true,
       },
     })
+    console.log('errerereree')
 
     return data
   }),

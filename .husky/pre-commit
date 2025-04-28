@@ -4,7 +4,7 @@ branch="$(git rev-parse --abbrev-ref HEAD)"
 pnpm lint-staged
 git update-index --again
 
-# if [ "$branch" = "main" ]; then
-#   echo "You shouldn't commit directly to main branch"
-#   exit 1
-# fi
+if [ "$branch" = "main" ]; then
+  echo "You shouldn't commit directly to main branch"
+  exit 1
+fi
