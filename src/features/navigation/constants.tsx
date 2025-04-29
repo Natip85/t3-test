@@ -41,15 +41,6 @@ export const MOBILE_USER_NAV_ITEMS: NavItem[] = [
     title: 'T3 testing 2',
     path: '/t3-testing2',
   },
-  // {
-  //   title: 'MORE',
-  //   path: '/more',
-  //   submenu: true,
-  //   submenuItems: [
-  //     {title: 'MORE STUFF', path: '/fdfdfd'},
-  //     {title: 'ANOTHER', path: '/gfgfhfgf'},
-  //   ],
-  // },
 ]
 
 export const PROFILE_MENU_LINKS = [
@@ -63,6 +54,6 @@ export const PROFILE_MENU_LINKS = [
     icon: <ArchiveIcon />,
     iconActive: <ArchiveIcon />,
     route: '/profile/history',
-    label: 'History',
+    label: 'Order History',
   },
 ]
