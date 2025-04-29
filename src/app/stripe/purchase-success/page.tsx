@@ -58,14 +58,13 @@ export default async function PurchaseSuccessPage({searchParams}: Props) {
                 )}
                 <div className='flex-1'>
                   <p className='font-medium'>{item.name}</p>
-                  {/* add more item details here if you want */}
                 </div>
               </div>
             ))}
           </div>
 
           <div className='flex justify-end gap-4 pt-6'>
-            <Link href={`/order/${order.id}`} className={buttonVariants()}>
+            <Link href={`/profile/history/${order.id}`} className={buttonVariants()}>
               View Order Details
             </Link>
             <Link href='/' className={buttonVariants({variant: 'outline'})}>

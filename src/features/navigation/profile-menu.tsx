@@ -19,7 +19,7 @@ const ProfileMenu = () => {
             key={link.label}
             className={cn(
               'font-button flex items-center justify-between border-b p-3 text-xl',
-              isActive ? 'text-primary' : 'text-secondary'
+              isActive ? 'text-primary' : ''
             )}
           >
             <span className='flex items-center gap-3'>
