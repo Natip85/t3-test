@@ -17,9 +17,10 @@ export async function POST(req: NextRequest) {
   )
 
   if (event.type === 'charge.succeeded') {
-    const charge = event.data.object
-    const cartId = charge.metadata.cartId
-    const userId = charge.metadata.userId
+    const paymentIntent = event.data.object
+    const cartId = paymentIntent.metadata.cartId
+    const userId = paymentIntent.metadata.userId
+    const paymentIntentId = paymentIntent.id
     console.log('userId', userId)
 
     if (!userId) {
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
         status: 'PAID',
         userId: userId,
         totalAmount: existingCart.totalAmount,
-        paymentIntentId: charge.payment_intent as string,
+        paymentIntentId: paymentIntentId,
       })
       .returning()
 
