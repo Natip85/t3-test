@@ -15,10 +15,13 @@ export default async function PurchaseSuccessPage({searchParams}: Props) {
   const {payment_intent} = await searchParams
 
   const paymentIntent = await stripe.paymentIntents.retrieve(payment_intent)
+  console.log('success retrieved paymentIntent', paymentIntent.metadata)
+
   if (paymentIntent.metadata.cartId == null) return notFound()
 
   const isSuccess = paymentIntent.status === 'succeeded'
   const order = await api.orders.getByIntentId(payment_intent)
+  console.log('success order>>>>', order)
 
   if (!order) return notFound()
 
