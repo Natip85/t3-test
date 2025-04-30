@@ -13,9 +13,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
 export default async function PurchaseSuccessPage({searchParams}: Props) {
   const {payment_intent} = await searchParams
+  console.log('success payment_intent>>>>', payment_intent)
 
   const paymentIntent = await stripe.paymentIntents.retrieve(payment_intent)
-  console.log('success retrieved paymentIntent', paymentIntent.metadata)
+  console.log('success retrieved paymentIntent>>>>', paymentIntent.metadata)
 
   if (paymentIntent.metadata.cartId == null) return notFound()
 
