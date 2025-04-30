@@ -20,16 +20,23 @@ export async function POST(req: NextRequest) {
     const charge = event.data.object
     const cartId = charge.metadata.cartId
     const userId = charge.metadata.userId
+    console.log('userId', userId)
 
     if (!userId) {
       return new NextResponse('Missing userId', {status: 400})
     }
+    console.log('yes uerId', userId)
+
     const currentUser = await db.query.users.findFirst({
       where: eq(users.id, userId),
     })
+    console.log('currentUser', currentUser)
+
     if (!currentUser) {
       return new NextResponse('Cannot find user', {status: 400})
     }
+    console.log('yes currentUser', currentUser)
+
     if (!cartId) {
       console.error('No cartId found in charge metadata.')
       return new NextResponse('Missing cartId', {status: 400})
