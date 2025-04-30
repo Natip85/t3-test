@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     process.env.STRIPE_WEBHOOK_SECRET!
   )
 
-  if (event.type === 'charge.succeeded') {
+  if (event.type === 'payment_intent.succeeded') {
     const paymentIntent = event.data.object
     const cartId = paymentIntent.metadata.cartId
     const userId = paymentIntent.metadata.userId
