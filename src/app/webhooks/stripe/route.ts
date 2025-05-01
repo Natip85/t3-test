@@ -13,10 +13,10 @@ export async function POST(req: NextRequest) {
   const event = stripe.webhooks.constructEvent(
     await req.text(),
     req.headers.get('stripe-signature')!,
-    process.env.STRIPE_WEBHOOK_SECRET!
+    env.STRIPE_WEBHOOK_SECRET
   )
 
-  if (event.type === 'payment_intent.succeeded') {
+  if (event.type === 'charge.succeeded') {
     const paymentIntent = event.data.object
     const cartId = paymentIntent.metadata.cartId
     const userId = paymentIntent.metadata.userId
