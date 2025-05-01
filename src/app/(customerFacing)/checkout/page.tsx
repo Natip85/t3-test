@@ -2,11 +2,11 @@ import CheckoutForm from '@/features/cart/checkout-form'
 import {auth} from '@/server/auth'
 import {api} from '@/trpc/server'
 import Stripe from 'stripe'
-
+import {env} from '@/env'
 type Props = {
   searchParams: Promise<{cartId: string}>
 }
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+const stripe = new Stripe(env.STRIPE_SECRET_KEY)
 
 export default async function CheckoutPage({searchParams}: Props) {
   const user = await auth()

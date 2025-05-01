@@ -6,10 +6,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import {notFound} from 'next/navigation'
 import Stripe from 'stripe'
+import {env} from '@/env'
 type Props = {
   searchParams: Promise<{payment_intent: string}>
 }
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+const stripe = new Stripe(env.STRIPE_SECRET_KEY)
 
 export default async function PurchaseSuccessPage({searchParams}: Props) {
   const {payment_intent} = await searchParams
@@ -24,8 +25,10 @@ export default async function PurchaseSuccessPage({searchParams}: Props) {
   const order = await api.orders.getByIntentId(payment_intent)
   console.log('success order>>>>', order)
 
-  if (!order) return notFound()
-
+  if (!order) {
+    console.error('No order found for payment_intent:', payment_intent)
+    return <div>Order not found</div>
+  }
   return (
     <div className='mx-auto w-full max-w-5xl space-y-8 p-6'>
       <div className='space-y-4 text-center'>
