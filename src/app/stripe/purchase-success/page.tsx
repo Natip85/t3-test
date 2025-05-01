@@ -7,6 +7,9 @@ import Link from 'next/link'
 import {notFound} from 'next/navigation'
 import Stripe from 'stripe'
 import {env} from '@/env'
+
+export const dynamic = 'force-dynamic'
+
 type Props = {
   searchParams: Promise<{payment_intent: string}>
 }
