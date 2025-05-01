@@ -21,23 +21,18 @@ export async function POST(req: NextRequest) {
     const cartId = paymentIntent.metadata.cartId
     const userId = paymentIntent.metadata.userId
     const paymentIntentId = paymentIntent.id
-    console.log('userId', userId)
-    console.log('paymentIntent>>>>', paymentIntent)
 
     if (!userId) {
       return new NextResponse('Missing userId', {status: 400})
     }
-    console.log('yes uerId', userId)
 
     const currentUser = await db.query.users.findFirst({
       where: eq(users.id, userId),
     })
-    console.log('currentUser', currentUser)
 
     if (!currentUser) {
       return new NextResponse('Cannot find user', {status: 400})
     }
-    console.log('yes currentUser', currentUser)
 
     if (!cartId) {
       console.error('No cartId found in charge metadata.')
@@ -53,7 +48,6 @@ export async function POST(req: NextRequest) {
       console.error('Cart not found')
       return new NextResponse('Cart not found', {status: 404})
     }
-    console.log('paymentIntentId>>>', paymentIntentId)
 
     const [newOrder] = await db
       .insert(order)
