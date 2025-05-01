@@ -6,8 +6,6 @@ import {eq} from 'drizzle-orm'
 
 export const ordersRouter = createTRPCRouter({
   getByIntentId: publicProcedure.input(z.string()).query(async ({ctx, input}) => {
-    console.log('getByIntentId input >>>>>', input)
-
     const retries = 5
     const delayMs = 500
 
@@ -23,8 +21,8 @@ export const ordersRouter = createTRPCRouter({
         return result
       }
 
-      // Wait before next retry
-      await new Promise((resolve) => setTimeout(resolve, delayMs))
+      console.log(`Retry ${i + 1}/${retries} - Order not found yet`)
+      await new Promise((resolve) => setTimeout(resolve, delayMs * (i + 1)))
     }
 
     return null

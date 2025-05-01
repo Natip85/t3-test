@@ -17,16 +17,13 @@ const stripe = new Stripe(env.STRIPE_SECRET_KEY)
 
 export default async function PurchaseSuccessPage({searchParams}: Props) {
   const {payment_intent} = await searchParams
-  console.log('success payment_intent>>>>', payment_intent)
 
   const paymentIntent = await stripe.paymentIntents.retrieve(payment_intent)
-  console.log('success retrieved paymentIntent>>>>', paymentIntent.metadata)
 
   if (paymentIntent.metadata.cartId == null) return notFound()
 
   const isSuccess = paymentIntent.status === 'succeeded'
   const order = await api.orders.getByIntentId(payment_intent)
-  console.log('success order>>>>', order)
 
   if (!order) {
     console.error('No order found for payment_intent:', payment_intent)
