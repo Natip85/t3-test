@@ -6,6 +6,8 @@ import {eq} from 'drizzle-orm'
 
 export const ordersRouter = createTRPCRouter({
   getByIntentId: publicProcedure.input(z.string()).query(async ({ctx, input}) => {
+    console.log('getByIntentId input>>>>>', input)
+
     const data = await ctx.db.query.order.findFirst({
       where: eq(order.paymentIntentId, input),
       with: {
