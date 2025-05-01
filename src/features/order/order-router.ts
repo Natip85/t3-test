@@ -6,17 +6,30 @@ import {eq} from 'drizzle-orm'
 
 export const ordersRouter = createTRPCRouter({
   getByIntentId: publicProcedure.input(z.string()).query(async ({ctx, input}) => {
-    console.log('getByIntentId input>>>>>', input)
+    console.log('getByIntentId input >>>>>', input)
 
-    const data = await ctx.db.query.order.findFirst({
-      where: eq(order.paymentIntentId, input),
-      with: {
-        items: true,
-      },
-    })
+    const retries = 5
+    const delayMs = 500
 
-    return data
+    for (let i = 0; i < retries; i++) {
+      const result = await ctx.db.query.order.findFirst({
+        where: eq(order.paymentIntentId, input),
+        with: {
+          items: true,
+        },
+      })
+
+      if (result) {
+        return result
+      }
+
+      // Wait before next retry
+      await new Promise((resolve) => setTimeout(resolve, delayMs))
+    }
+
+    return null
   }),
+
   getById: protectedProcedure.input(z.number()).query(async ({ctx, input}) => {
     const data = await ctx.db.query.order.findFirst({
       where: eq(order.id, input),
