@@ -22,6 +22,7 @@ export async function POST(req: NextRequest) {
     const userId = paymentIntent.metadata.userId
     const paymentIntentId = paymentIntent.id
     console.log('userId', userId)
+    console.log('paymentIntent>>>>', paymentIntent)
 
     if (!userId) {
       return new NextResponse('Missing userId', {status: 400})
@@ -52,6 +53,7 @@ export async function POST(req: NextRequest) {
       console.error('Cart not found')
       return new NextResponse('Cart not found', {status: 404})
     }
+    console.log('paymentIntentId>>>', paymentIntentId)
 
     const [newOrder] = await db
       .insert(order)
